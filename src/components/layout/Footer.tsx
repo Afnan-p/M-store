@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Phone, Mail, MapPin, Clock, ArrowRight, MessageSquare, Truck, ShieldCheck, Headphones } from 'lucide-react';
 import { getGeneralWhatsAppLink } from '../../utils/whatsapp';
+import { useScrollReveal } from '../../hooks/useScrollReveal';
 
 export const Footer: React.FC = () => {
   const [emailInput, setEmailInput] = useState('');
+  const { ref, isVisible } = useScrollReveal<HTMLElement>({ threshold: 0.05 });
 
   const handleNewsletter = (e: React.FormEvent) => {
     e.preventDefault();
@@ -15,7 +17,7 @@ export const Footer: React.FC = () => {
   };
 
   return (
-    <footer className="w-full font-sans bg-white border-t border-zinc-200">
+    <footer ref={ref} className={`w-full font-sans bg-white border-t border-zinc-200 reveal-hidden ${isVisible ? 'reveal-visible' : ''}`}>
       
       {/* Main Upper Footer Section - Clean Pure White Background */}
       <div className="w-full pt-12 pb-14 text-zinc-800 text-xs relative bg-white">

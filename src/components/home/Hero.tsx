@@ -43,7 +43,7 @@ export const Hero: React.FC = () => {
           w-full max-w-[1800px]
           items-center justify-between
           px-5 sm:px-[6.5vw]
-          pt-16 sm:pt-24 lg:pt-24
+          pt-24 sm:pt-28 lg:pt-24
           pb-2 lg:pb-4
         "
       >
@@ -70,6 +70,7 @@ export const Hero: React.FC = () => {
               text-[11px] font-extrabold
               tracking-[0.22em] text-[#E50914]
               uppercase
+              animate-hero-text-smooth apple-delay-0
             "
           >
             <span className="h-[2px] w-10 bg-[#E50914]" />
@@ -88,6 +89,7 @@ export const Hero: React.FC = () => {
               sm:text-[66px]
               lg:text-[76px]
               xl:text-[86px]
+              animate-hero-text-smooth apple-delay-150
             "
           >
             More Than Just
@@ -106,6 +108,7 @@ export const Hero: React.FC = () => {
               leading-[1.55]
               text-zinc-600
               font-medium
+              animate-hero-text-smooth apple-delay-300
             "
           >
             Curated iPhones. Trusted quality. A premium
@@ -118,24 +121,27 @@ export const Hero: React.FC = () => {
           <Link
             to="/iphones"
             className="
-              mt-6 sm:mt-8 inline-flex h-[54px] sm:h-[56px]
-              min-w-[210px] sm:min-w-[220px]
+              mt-6 sm:mt-8 inline-flex h-[46px] sm:h-[56px]
+              min-w-[170px] sm:min-w-[220px]
               items-center justify-center
-              gap-4
+              gap-2.5 sm:gap-4
               rounded-full
               bg-[#E50914]
-              px-8
-              text-[15px]
+              px-6 sm:px-8
+              text-xs sm:text-[15px]
               font-bold text-white
               shadow-[0_12px_28px_rgba(229,9,20,0.3)]
               transition-all
               hover:-translate-y-1
               hover:bg-red-700
               active:scale-95
+              cursor-pointer
+              relative z-30
+              animate-hero-text-smooth apple-delay-450
             "
           >
             <span>Shop iPhones</span>
-            <span className="text-xl">→</span>
+            <span className="text-base sm:text-xl">→</span>
           </Link>
 
 
@@ -149,6 +155,7 @@ export const Hero: React.FC = () => {
               tracking-[0.22em]
               text-zinc-400
               uppercase
+              animate-hero-text-smooth apple-delay-600
             "
           >
             <span className="h-px w-14 bg-zinc-300" />

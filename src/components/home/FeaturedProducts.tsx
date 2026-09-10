@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import type { Product } from '../../types/product';
 import { ProductGrid } from '../product/ProductGrid';
 import { ArrowRight } from 'lucide-react';
+import { useScrollReveal } from '../../hooks/useScrollReveal';
 
 interface FeaturedProductsProps {
   products: Product[];
@@ -10,6 +11,7 @@ interface FeaturedProductsProps {
 }
 
 export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, loading }) => {
+  const { ref, isVisible } = useScrollReveal<HTMLElement>({ threshold: 0.08 });
   const [activeTab, setActiveTab] = React.useState<'all' | 'new' | 'used' | 'accessory'>('all');
 
   const filtered = products.filter((p) => {
@@ -21,16 +23,8 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, lo
   }).slice(0, 8);
 
   return (
-    <section className="py-12 sm:py-16 relative overflow-hidden bg-[#FAF9F6]">
-      
-      {/* Full Cover Background Banner matching reference image */}
-      {/* <img
-        src="/images/featured-header-banner.png"
-        alt="Featured Banner Background"
-        className="absolute inset-0 w-full h-full object-cover object-top opacity-100 pointer-events-none select-none z-0"
-      /> */}
-
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 space-y-8 relative z-10">
+    <section ref={ref} className="py-12 sm:py-16 relative overflow-hidden bg-[#FAF9F6]">
+      <div className={`max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 space-y-8 relative z-10 reveal-hidden ${isVisible ? 'reveal-visible' : ''}`}>
         
         {/* Header Row */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 relative">

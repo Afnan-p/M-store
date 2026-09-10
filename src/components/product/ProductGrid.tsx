@@ -51,8 +51,12 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   if (mobileHorizontalScroll) {
     return (
       <div className="grid grid-rows-2 grid-flow-col auto-cols-[calc(50%-6px)] sm:auto-cols-[calc(33.333%-10px)] gap-2.5 sm:gap-4 overflow-x-auto pb-4 pt-1 snap-x snap-mandatory scrollbar-none [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid-cols-3 lg:grid-cols-4 md:grid-rows-none md:grid-flow-row md:auto-cols-auto md:overflow-visible md:pb-0 md:gap-6 items-stretch w-full">
-        {products.map((product) => (
-          <div key={product.id} className="snap-start h-full flex flex-col">
+        {products.map((product, idx) => (
+          <div
+            key={product.id}
+            className="snap-start h-full flex flex-col apple-reveal-card"
+            style={{ transitionDelay: `${100 + idx * 80}ms` }}
+          >
             <ProductCard product={product} />
           </div>
         ))}
@@ -62,8 +66,14 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4 md:gap-6 items-stretch w-full">
-      {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+      {products.map((product, idx) => (
+        <div
+          key={product.id}
+          className="h-full flex flex-col apple-reveal-card"
+          style={{ transitionDelay: `${100 + idx * 80}ms` }}
+        >
+          <ProductCard product={product} />
+        </div>
       ))}
     </div>
   );

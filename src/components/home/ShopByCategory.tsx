@@ -1,33 +1,40 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useScrollReveal } from '../../hooks/useScrollReveal';
 
 export const ShopByCategory: React.FC = () => {
+  const { ref, isVisible } = useScrollReveal<HTMLElement>({ threshold: 0.1 });
+
   const categories = [
     {
       title: 'iPhones',
       image: '/images/cat-iphones.png',
       link: '/iphones',
+      delay: 'delay-100',
     },
     {
       title: 'Used iPhones',
       image: '/images/cat-preowned.png?v=2',
       link: '/used-iphones',
+      delay: 'delay-200',
     },
     {
       title: 'Accessories',
       image: '/images/cat-accessories.png',
       link: '/accessories',
+      delay: 'delay-300',
     },
     {
       title: 'Offers',
       image: '/images/cat-offers.png',
       link: '/offers',
+      delay: 'delay-400',
     },
   ];
 
   return (
-    <section className="py-10 sm:py-14 lg:py-20 bg-[#FAF9F6] border-b border-zinc-200/60" id="categories">
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
+    <section ref={ref} className="py-10 sm:py-14 lg:py-20 bg-[#FAF9F6] border-b border-zinc-200/60" id="categories">
+      <div className={`max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 reveal-hidden ${isVisible ? 'reveal-visible' : ''}`}>
         
         {/* Section Heading - Compact Height */}
         <div className="text-center mb-5 sm:mb-7 space-y-0.5">
@@ -49,7 +56,8 @@ export const ShopByCategory: React.FC = () => {
             <Link
               key={idx}
               to={cat.link}
-              className="group flex flex-col items-center text-center cursor-pointer"
+              className="group flex flex-col items-center text-center cursor-pointer apple-reveal-card"
+              style={{ transitionDelay: `${idx * 100}ms` }}
             >
               {/* Card Box Container - Compact height */}
               <div className="w-full max-w-[160px] sm:max-w-[190px] aspect-square bg-white border border-zinc-200/80 rounded-[18px] sm:rounded-[22px] shadow-xs group-hover:shadow-md group-hover:border-zinc-300 transition-all duration-300 flex items-center justify-center overflow-hidden">

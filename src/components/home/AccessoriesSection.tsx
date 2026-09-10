@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, ArrowRight } from 'lucide-react';
+import { BRAND_CONFIG } from '../../services/config';
 import { formatCurrency } from '../../utils/formatters';
 import { useWishlist } from '../../context/WishlistContext';
+import { useScrollReveal } from '../../hooks/useScrollReveal';
 
 interface AccessoryItem {
   id: string;
@@ -16,6 +18,7 @@ interface AccessoryItem {
 
 export const AccessoriesSection: React.FC = () => {
   const { isInWishlist, toggleWishlist } = useWishlist();
+  const { ref, isVisible } = useScrollReveal<HTMLElement>({ threshold: 0.08 });
 
   const accessories: AccessoryItem[] = [
     {
@@ -69,15 +72,15 @@ export const AccessoriesSection: React.FC = () => {
     const text = encodeURIComponent(
       `Hi M STORE, I am interested in buying ${item.name} (${formatCurrency(item.price)}). Please provide more details.`
     );
-    return `https://wa.me/919876543210?text=${text}`;
+    return `https://wa.me/${BRAND_CONFIG.whatsappNumberClean}?text=${text}`;
   };
 
   return (
-    <section className="py-10 sm:py-14 bg-white border-b border-zinc-200/60">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 space-y-7">
+    <section ref={ref} className="py-10 sm:py-14 bg-white border-b border-zinc-200/60">
+      <div className={`max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 space-y-7 reveal-hidden ${isVisible ? 'reveal-visible' : ''}`}>
         
         {/* Section Header */}
-        <div className="flex items-end justify-between gap-4">
+        <div className="flex items-end justify-between gap-4 apple-reveal-item" style={{ transitionDelay: '0ms' }}>
           <div className="space-y-1">
             <span className="text-[11px] font-semibold text-[#E50914] uppercase tracking-[0.2em] block">
               APPLE ESSENTIALS
@@ -100,13 +103,14 @@ export const AccessoriesSection: React.FC = () => {
         </div>
 
         {/* 2-Card Mobile Carousel / 5-Column Desktop Grid */}
-        <div className="flex md:grid md:grid-cols-5 gap-2.5 md:gap-5 overflow-x-auto scrollbar-none [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory pb-1 -mx-4 px-4 md:mx-0 md:px-0">
-          {accessories.map((item) => {
+        <div className="flex md:grid md:grid-cols-5 gap-3 sm:gap-4 md:gap-5 overflow-x-auto scrollbar-none [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory pb-2 pt-1">
+          {accessories.map((item, idx) => {
             const isLiked = isInWishlist(item.id);
             return (
               <div
                 key={item.id}
-                className="group relative bg-white border border-zinc-200/90 hover:border-zinc-300 rounded-2xl overflow-hidden flex flex-col justify-between h-full transition-all duration-300 shadow-xs hover:shadow-md hover:-translate-y-0.5 shrink-0 w-[calc((100%-10px)/2)] snap-start md:w-auto"
+                className="group relative bg-white border border-zinc-200/90 hover:border-zinc-300 rounded-2xl overflow-hidden flex flex-col justify-between h-full transition-all duration-300 shadow-xs hover:shadow-md hover:-translate-y-0.5 shrink-0 w-[calc((100%-12px)/2)] sm:w-[240px] snap-start md:w-auto apple-reveal-card"
+                style={{ transitionDelay: `${100 + idx * 80}ms` }}
               >
                 {/* Product Image Area - Edge to Edge Fixed Aspect Ratio */}
                 <div className="relative w-full h-40 sm:h-48 bg-zinc-50 border-b border-zinc-100 overflow-hidden select-none">

@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Coins, Headphones, MapPin, ArrowRight } from 'lucide-react';
+import { useScrollReveal } from '../../hooks/useScrollReveal';
 
 export const WhyChooseUs: React.FC = () => {
+  const { ref, isVisible } = useScrollReveal<HTMLElement>({ threshold: 0.1 });
+
   const promiseItems = [
     {
       icon: <ShieldCheck className="w-5 h-5 text-zinc-900" />,
@@ -27,8 +30,8 @@ export const WhyChooseUs: React.FC = () => {
   ];
 
   return (
-    <section className="py-10 sm:py-16 bg-white">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12">
+    <section ref={ref} className="py-10 sm:py-16 bg-white">
+      <div className={`max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 reveal-hidden ${isVisible ? 'reveal-visible' : ''}`}>
         {/* Main Card Container with Soft Warm Tint Background */}
         <div className="relative rounded-[28px] sm:rounded-[36px] bg-[#FFF8F7] border border-[#F6E3E1]/80 p-6 sm:p-10 lg:p-12 overflow-hidden shadow-xs">
           
@@ -38,7 +41,7 @@ export const WhyChooseUs: React.FC = () => {
             <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-12 gap-8 items-center">
               
               {/* Left Column: Heading & CTA */}
-              <div className="sm:col-span-7 space-y-5 text-left">
+              <div className="sm:col-span-7 space-y-5 text-left apple-reveal-item" style={{ transitionDelay: '0ms' }}>
                 <span className="text-[11px] font-semibold text-[#E50914] uppercase tracking-[0.2em] block">
                   THE M STORE STANDARD
                 </span>
@@ -66,7 +69,11 @@ export const WhyChooseUs: React.FC = () => {
               {/* Right Column: 4 Circular Badge Items */}
               <div className="sm:col-span-5 space-y-5">
                 {promiseItems.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-3.5 group">
+                  <div
+                    key={idx}
+                    className="flex items-center gap-3.5 group apple-reveal-item"
+                    style={{ transitionDelay: `${120 + idx * 80}ms` }}
+                  >
                     <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white border border-zinc-200/80 shadow-xs flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105">
                       {item.icon}
                     </div>
@@ -85,7 +92,7 @@ export const WhyChooseUs: React.FC = () => {
             </div>
 
             {/* Right Side: Showroom Photo Card */}
-            <div className="lg:col-span-5 h-full flex items-center justify-center">
+            <div className="lg:col-span-5 h-full flex items-center justify-center apple-reveal-card" style={{ transitionDelay: '200ms' }}>
               <div className="relative w-full h-[280px] sm:h-[340px] lg:h-[380px] rounded-2xl sm:rounded-3xl overflow-hidden border border-zinc-200/60 shadow-md">
                 <img
                   src="/images/promise-showroom.png"

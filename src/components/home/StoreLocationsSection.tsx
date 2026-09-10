@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, MapPin } from 'lucide-react';
+import { useScrollReveal } from '../../hooks/useScrollReveal';
 
 export const StoreLocationsSection: React.FC = () => {
+  const { ref, isVisible } = useScrollReveal<HTMLElement>({ threshold: 0.1 });
+
   const stores = [
     {
       id: 'kootanad',
@@ -24,25 +27,25 @@ export const StoreLocationsSection: React.FC = () => {
       id: 'mattom',
       number: '03',
       name: 'Mattom',
-      location: 'Near Mini Bypass',
+      location: 'Near Church Junction',
       image: '/images/store-mattom.png',
       maps: 'https://maps.google.com/?q=Mattom+Kerala',
     },
   ];
 
   return (
-    <section className="relative py-5 sm:py-8 lg:py-12 bg-[#FAF9F6] border-b border-zinc-200/60 overflow-hidden" id="locations">
+    <section ref={ref} className="relative py-5 sm:py-8 lg:py-12 bg-[#FAF9F6] border-b border-zinc-200/60 overflow-hidden" id="locations">
       
       {/* Background Giant M Watermark */}
       <div className="absolute right-[-20px] lg:right-[5%] top-1/2 -translate-y-1/2 text-[260px] sm:text-[380px] lg:text-[480px] font-black text-zinc-200/40 select-none pointer-events-none font-display leading-none z-0">
         M
       </div>
 
-      <div className="relative z-10 max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12">
+      <div className={`relative z-10 max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 reveal-hidden ${isVisible ? 'reveal-visible' : ''}`}>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
           
           {/* LEFT COLUMN: Main Title, Description, Button, Feature Points */}
-          <div className="lg:col-span-4 xl:col-span-4 space-y-4 text-left">
+          <div className="lg:col-span-4 xl:col-span-4 space-y-4 text-left apple-reveal-item" style={{ transitionDelay: '0ms' }}>
             
             {/* Header Tag */}
             <div className="flex items-center gap-3">
@@ -75,8 +78,6 @@ export const StoreLocationsSection: React.FC = () => {
               </Link>
             </div>
 
-
-
           </div>
 
           {/* RIGHT COLUMN: 3 Circular Stores Cards with Pin Indicators & Map Curve */}
@@ -98,8 +99,12 @@ export const StoreLocationsSection: React.FC = () => {
 
             {/* 3 Circular Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 lg:gap-6 relative z-10 items-start">
-              {stores.map((st) => (
-                <div key={st.id} className="flex flex-col items-center group">
+              {stores.map((st, idx) => (
+                <div
+                  key={st.id}
+                  className="flex flex-col items-center group apple-reveal-card"
+                  style={{ transitionDelay: `${120 + idx * 100}ms` }}
+                >
                   
                   {/* Top Red Location Pin Header */}
                   <div className="flex items-center gap-1.5 mb-3 select-none">

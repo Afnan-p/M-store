@@ -2,11 +2,11 @@ export const BRAND_CONFIG = {
   name: 'M STORE',
   tagline: 'Used & New iPhones',
   subtitle: 'Quality Checked • Best Value • Trusted Service',
-  whatsappNumber: '+919876543210', // Configurable WhatsApp number
-  whatsappNumberClean: '919876543210',
+  whatsappNumber: '+918891003031', // Configurable WhatsApp number
+  whatsappNumberClean: '918891003031',
   instagram: 'https://instagram.com/m_store_official',
   instagramHandle: '@m_store_official',
-  phone: '+91 98765 43210',
+  phone: '+91 88910 03031',
   email: 'support@mstorekerala.in',
   locationsSummary: 'Kootanad • Kecheri • Mattom',
 };

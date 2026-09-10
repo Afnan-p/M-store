@@ -69,7 +69,6 @@ export const ProductDetailsPage: React.FC = () => {
 
   const isUsed = product.category === 'iphone-used';
   const isNew = product.category === 'iphone-new';
-  const whatsappUrl = getWhatsAppProductLink(product);
   const savings = product.originalPrice && product.originalPrice > product.price
     ? product.originalPrice - product.price
     : 0;
@@ -199,7 +198,7 @@ export const ProductDetailsPage: React.FC = () => {
           {/* Prominent CTAs */}
           <div className="space-y-2.5 pt-1">
             <a
-              href={whatsappUrl}
+              href={getWhatsAppProductLink(product)}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full inline-block"

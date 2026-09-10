@@ -8,28 +8,14 @@ export function getWhatsAppProductLink(product: Product): string {
     maximumFractionDigits: 0,
   }).format(product.price);
 
-  let details = `${product.name}`;
-  if (product.storage && product.storage !== 'N/A') {
-    details += ` (${product.storage})`;
-  }
-  if (product.color) {
-    details += ` - ${product.color}`;
-  }
-
-  if (product.category === 'iphone-used' && product.batteryHealth) {
-    details += ` [Pre-Owned • ${product.batteryHealth}% Battery Health]`;
-  } else if (product.category === 'iphone-new') {
-    details += ` [Brand New]`;
-  }
-
   const productUrl = `${window.location.origin}/product/${product.id}`;
 
-  const message = `Hi M STORE, I would like to enquire about:
-📌 *${details}*
-💰 Price: *${priceFormatted}*
-🔗 Link: ${productUrl}
-
-Is this item available in stock? Please share availability and store location details.`;
+  const message = `Hi M STORE, I'm interested in:
+Product: ${product.name}
+Storage: ${product.storage || 'N/A'}
+Color: ${product.color || 'Default'}
+Price: ${priceFormatted}
+Product: ${productUrl}`;
 
   return `https://wa.me/${BRAND_CONFIG.whatsappNumberClean}?text=${encodeURIComponent(message)}`;
 }

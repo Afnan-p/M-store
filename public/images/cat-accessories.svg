@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="podBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#191B1F" />
+      <stop offset="50%" stop-color="#0F1014" />
+      <stop offset="100%" stop-color="#060708" />
+    </linearGradient>
+    <linearGradient id="podCaseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#D1D1D6" />
+    </linearGradient>
+    <filter id="podShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="20" stdDeviation="25" flood-color="#000000" flood-opacity="0.9"/>
+    </filter>
+  </defs>
+
+  <rect width="600" height="400" fill="url(#podBg)"/>
+  
+  <circle cx="300" cy="180" r="160" fill="#38BDF8" opacity="0.08" filter="blur(50px)"/>
+
+  <!-- AirPods Pro Studio Vector Artwork -->
+  <g transform="translate(140, 20) scale(1.15)">
+    <!-- Open Charging Case Body -->
+    <rect x="70" y="160" width="240" height="170" rx="60" fill="url(#podCaseGrad)" stroke="#E5E5EA" stroke-width="2" filter="url(#podShadow)"/>
+    <rect x="70" y="160" width="240" height="40" rx="20" fill="#E5E5EA" opacity="0.6"/>
+
+    <!-- Left Earbud Floating -->
+    <g transform="translate(100, 30)">
+      <path d="M 40 40 C 20 40 10 60 10 80 C 10 100 25 115 45 115 C 60 115 75 100 75 80 C 75 60 60 40 40 40 Z" fill="#FFFFFF"/>
+      <rect x="35" y="105" width="16" height="60" rx="8" fill="#FFFFFF"/>
+      <!-- Black Mesh Vents -->
+      <ellipse cx="25" cy="75" rx="6" ry="12" fill="#1C1C1E"/>
+      <circle cx="50" cy="85" r="4" fill="#1C1C1E"/>
+    </g>
+
+    <!-- Right Earbud Floating -->
+    <g transform="translate(200, 20)">
+      <path d="M 40 40 C 20 40 5 60 5 80 C 5 100 20 115 40 115 C 60 115 70 100 70 80 C 70 60 60 40 40 40 Z" fill="#FFFFFF"/>
+      <rect x="30" y="105" width="16" height="60" rx="8" fill="#FFFFFF"/>
+      <ellipse cx="50" cy="75" rx="6" ry="12" fill="#1C1C1E"/>
+      <circle cx="25" cy="85" r="4" fill="#1C1C1E"/>
+    </g>
+  </g>
+</svg>

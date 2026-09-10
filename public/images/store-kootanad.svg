@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" width="100%" height="100%">
+  <defs>
+    <linearGradient id="kBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1F1F23" />
+      <stop offset="100%" stop-color="#0B0B0D" />
+    </linearGradient>
+  </defs>
+  <rect width="600" height="350" fill="url(#kBg)"/>
+  <!-- Facade Glow -->
+  <rect x="50" y="40" width="500" height="270" rx="16" fill="#151518" stroke="#E50914" stroke-width="2"/>
+  <!-- Signboard -->
+  <rect x="100" y="60" width="400" height="60" rx="12" fill="#E50914"/>
+  <text x="300" y="100" font-family="sans-serif" font-weight="900" font-size="28" fill="#FFFFFF" text-anchor="middle" letter-spacing="4">M STORE — KOOTANAD</text>
+  <!-- Glass Windows with Phone Displays -->
+  <rect x="100" y="140" width="180" height="150" rx="8" fill="#0B0B0D" stroke="#27272A" stroke-width="2"/>
+  <rect x="320" y="140" width="180" height="150" rx="8" fill="#0B0B0D" stroke="#27272A" stroke-width="2"/>
+  <text x="190" y="220" font-family="sans-serif" font-weight="700" font-size="14" fill="#A1A1AA" text-anchor="middle">NEW iPHONES</text>
+  <text x="410" y="220" font-family="sans-serif" font-weight="700" font-size="14" fill="#E50914" text-anchor="middle">PRE-OWNED HUB</text>
+</svg>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="starlightGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FAF7F2" />
+      <stop offset="50%" stop-color="#E8E2D8" />
+      <stop offset="100%" stop-color="#C5BEB2" />
+    </linearGradient>
+  </defs>
+  <rect x="85" y="45" width="230" height="410" rx="40" fill="url(#starlightGrad)" stroke="#FFFFFF" stroke-width="3"/>
+  <rect x="105" y="65" width="110" height="110" rx="24" fill="#DDD7CB" stroke="#FAF7F2" stroke-width="1.5"/>
+  <circle cx="140" cy="98" r="20" fill="#2E2C28" stroke="#FFFFFF" stroke-width="2.5"/>
+  <circle cx="140" cy="142" r="20" fill="#2E2C28" stroke="#FFFFFF" stroke-width="2.5"/>
+  <text x="200" y="410" font-family="sans-serif" font-weight="800" font-size="13" fill="#1C1B1A" text-anchor="middle" letter-spacing="2">iPhone 13</text>
+  <text x="200" y="428" font-family="sans-serif" font-weight="600" font-size="10" fill="#E50914" text-anchor="middle" letter-spacing="1">STARLIGHT</text>
+</svg>

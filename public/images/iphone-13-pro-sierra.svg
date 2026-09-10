@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="sierraGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9BB6CE" />
+      <stop offset="50%" stop-color="#6788A5" />
+      <stop offset="100%" stop-color="#345470" />
+    </linearGradient>
+  </defs>
+  <rect x="85" y="45" width="230" height="410" rx="40" fill="url(#sierraGrad)" stroke="#BBD6EC" stroke-width="3"/>
+  <rect x="105" y="65" width="115" height="115" rx="26" fill="#52728E" stroke="#87A9C7" stroke-width="1.5"/>
+  <circle cx="138" cy="98" r="22" fill="#172C3E" stroke="#A9C7E2" stroke-width="3"/>
+  <circle cx="138" cy="148" r="22" fill="#172C3E" stroke="#A9C7E2" stroke-width="3"/>
+  <circle cx="188" cy="123" r="22" fill="#172C3E" stroke="#A9C7E2" stroke-width="3"/>
+  <text x="200" y="410" font-family="sans-serif" font-weight="800" font-size="13" fill="#FFFFFF" text-anchor="middle" letter-spacing="2">iPhone 13 Pro</text>
+  <text x="200" y="428" font-family="sans-serif" font-weight="600" font-size="10" fill="#E50914" text-anchor="middle" letter-spacing="1">SIERRA BLUE</text>
+</svg>

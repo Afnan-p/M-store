@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="goldBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#241E17" />
+      <stop offset="50%" stop-color="#17130F" />
+      <stop offset="100%" stop-color="#0B0907" />
+    </linearGradient>
+    <linearGradient id="goldPlateau" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5C4D38" />
+      <stop offset="100%" stop-color="#2D251A" />
+    </linearGradient>
+    <filter id="goldGlow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="15" stdDeviation="20" flood-color="#000000" flood-opacity="0.9"/>
+    </filter>
+  </defs>
+
+  <rect width="600" height="400" fill="url(#goldBg)"/>
+  
+  <circle cx="350" cy="180" r="180" fill="#D4AF37" opacity="0.08" filter="blur(50px)"/>
+
+  <!-- Stacked Pre-Owned Gold & Titanium iPhones Artwork -->
+  <g transform="translate(160, 20) scale(1.3)">
+    <!-- Back device stacked -->
+    <path d="M 40 40 Q 40 0 80 0 L 320 0 C 340 0 350 10 350 30 L 350 280 L 40 280 Z" fill="#1C1814" stroke="#4A3F31" stroke-width="2" opacity="0.7"/>
+
+    <!-- Front main Gold iPhone -->
+    <path d="M 0 50 Q 0 10 40 10 L 280 10 C 300 10 310 20 310 40 L 310 310 Q 310 330 280 330 L 40 330 Q 0 330 0 280 Z" fill="#3D3224" stroke="#9E855C" stroke-width="3" filter="url(#goldGlow)"/>
+
+    <!-- Glass Camera Plateau -->
+    <rect x="30" y="40" width="150" height="150" rx="34" fill="url(#goldPlateau)" stroke="#BFA375" stroke-width="2"/>
+
+    <!-- Lenses with Gold Metallic Trim -->
+    <circle cx="72" cy="82" r="30" fill="#0E0C09" stroke="#E6C894" stroke-width="4"/>
+    <circle cx="72" cy="82" r="20" fill="#040403" stroke="#66563D" stroke-width="2"/>
+
+    <circle cx="72" cy="148" r="30" fill="#0E0C09" stroke="#E6C894" stroke-width="4"/>
+    <circle cx="72" cy="148" r="20" fill="#040403" stroke="#66563D" stroke-width="2"/>
+
+    <circle cx="138" cy="115" r="30" fill="#0E0C09" stroke="#E6C894" stroke-width="4"/>
+    <circle cx="138" cy="115" r="20" fill="#040403" stroke="#66563D" stroke-width="2"/>
+
+    <!-- Flash -->
+    <circle cx="138" cy="60" r="9" fill="#FFF8E0"/>
+  </g>
+</svg>

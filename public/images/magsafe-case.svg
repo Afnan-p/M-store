@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="leatherGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8B5A2B" />
+      <stop offset="100%" stop-color="#5C3A16" />
+    </linearGradient>
+  </defs>
+  <rect x="85" y="45" width="230" height="410" rx="40" fill="url(#leatherGrad)" stroke="#B87D4B" stroke-width="3"/>
+  <rect x="105" y="65" width="115" height="115" rx="26" fill="#42290F" stroke="#7A4E24" stroke-width="2"/>
+  <circle cx="200" cy="260" r="50" fill="none" stroke="#A87242" stroke-width="3" stroke-dasharray="6,4"/>
+  <line x1="200" y1="310" x2="200" y2="340" stroke="#A87242" stroke-width="3"/>
+  <text x="200" y="410" font-family="sans-serif" font-weight="800" font-size="13" fill="#FFFFFF" text-anchor="middle" letter-spacing="2">MagSafe Leather Case</text>
+  <text x="200" y="428" font-family="sans-serif" font-weight="600" font-size="10" fill="#E50914" text-anchor="middle" letter-spacing="1">SADDLE BROWN</text>
+</svg>

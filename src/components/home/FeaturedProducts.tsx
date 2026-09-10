@@ -79,7 +79,7 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, lo
         </div>
 
         {/* Grid with 2-row horizontal scroll on mobile */}
-        <ProductGrid products={filtered} loading={loading} mobileHorizontalScroll={true} />
+        <ProductGrid products={filtered} loading={loading} mobileHorizontalScroll={true} animated={true} />
       </div>
     </section>
   );

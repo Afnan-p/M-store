@@ -127,7 +127,7 @@ export const PhoneModelNavigation: React.FC<PhoneModelNavigationProps> = ({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUpOrLeave}
         onMouseLeave={handleMouseUpOrLeave}
-        className={`w-full flex items-center justify-start sm:justify-center gap-4 sm:gap-6 overflow-x-auto no-scrollbar scroll-smooth px-8 sm:px-12 py-1 select-none ${
+        className={`w-full flex items-center justify-start gap-4 sm:gap-6 overflow-x-auto no-scrollbar scroll-smooth px-10 sm:px-14 py-1 select-none ${
           isDragging ? 'cursor-grabbing' : 'cursor-grab'
         }`}
       >

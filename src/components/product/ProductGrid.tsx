@@ -9,6 +9,7 @@ interface ProductGridProps {
   emptyTitle?: string;
   emptySubtitle?: string;
   mobileHorizontalScroll?: boolean;
+  animated?: boolean;
 }
 
 export const ProductGrid: React.FC<ProductGridProps> = ({
@@ -17,6 +18,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   emptyTitle = 'No iPhones found',
   emptySubtitle = 'Try adjusting your filters or search terms.',
   mobileHorizontalScroll = false,
+  animated = false,
 }) => {
   if (loading) {
     return (
@@ -54,8 +56,8 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
         {products.map((product, idx) => (
           <div
             key={product.id}
-            className="snap-start h-full flex flex-col apple-reveal-card"
-            style={{ transitionDelay: `${100 + idx * 80}ms` }}
+            className={`snap-start h-full flex flex-col ${animated ? 'apple-reveal-card' : ''}`}
+            style={animated ? { transitionDelay: `${100 + idx * 80}ms` } : undefined}
           >
             <ProductCard product={product} />
           </div>
@@ -69,8 +71,8 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
       {products.map((product, idx) => (
         <div
           key={product.id}
-          className="h-full flex flex-col apple-reveal-card"
-          style={{ transitionDelay: `${100 + idx * 80}ms` }}
+          className={`h-full flex flex-col ${animated ? 'apple-reveal-card' : ''}`}
+          style={animated ? { transitionDelay: `${100 + idx * 80}ms` } : undefined}
         >
           <ProductCard product={product} />
         </div>

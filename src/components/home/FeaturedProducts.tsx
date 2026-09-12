@@ -23,7 +23,7 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, lo
   }).slice(0, 8);
 
   return (
-    <section ref={ref} className="py-12 sm:py-16 relative overflow-hidden bg-[#FAF9F6]">
+    <section ref={ref} className="py-10 sm:py-14 lg:py-[54px] relative overflow-hidden bg-[#FAF9F6]">
       <div className={`max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 space-y-8 relative z-10 reveal-hidden ${isVisible ? 'reveal-visible' : ''}`}>
         
         {/* Header Row */}
@@ -34,7 +34,7 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, lo
             <span className="text-[11px] font-semibold text-[#E50914] uppercase tracking-[0.2em] block">
               FEATURED COLLECTION
             </span>
-            <h2 className="font-display text-3xl sm:text-4xl font-bold text-zinc-950 tracking-tight">
+            <h2 className="font-ds-quilter text-3xl sm:text-4xl font-bold text-zinc-950 tracking-tight">
               The Latest iPhones
             </h2>
             <p className="text-xs sm:text-sm text-zinc-600 font-normal leading-relaxed">

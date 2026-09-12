@@ -33,7 +33,7 @@ export const ShopByCategory: React.FC = () => {
   ];
 
   return (
-    <section ref={ref} className="py-10 sm:py-14 lg:py-20 bg-[#FAF9F6] border-b border-zinc-200/60" id="categories">
+    <section ref={ref} className="py-10 sm:py-14 lg:py-[70px] bg-[#FAF9F6] border-b border-zinc-200/60" id="categories">
       <div className={`max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 reveal-hidden ${isVisible ? 'reveal-visible' : ''}`}>
         
         {/* Section Heading - Compact Height */}
@@ -41,7 +41,7 @@ export const ShopByCategory: React.FC = () => {
           <span className="text-[11px] font-extrabold text-[#E50914] tracking-[0.28em] uppercase block">
             SHOP BY
           </span>
-          <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-zinc-950 tracking-tight leading-none pt-0.5">
+          <h2 className="font-ds-quilter text-2xl sm:text-3xl lg:text-4xl font-extrabold text-zinc-950 tracking-tight leading-none pt-0.5">
             Categories
           </h2>
           <div className="w-8 h-[2.5px] bg-[#E50914] mx-auto mt-2 rounded-full" />

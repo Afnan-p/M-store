@@ -90,7 +90,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {/* Title & Storage / Color Metadata */}
         <div>
           <Link to={`/product/${product.id}`} className="group-hover:text-[#E50914] transition-colors">
-            <h3 className="font-display font-semibold text-[13px] sm:text-[17px] text-zinc-950 tracking-tight leading-snug line-clamp-1">
+            <h3 className="font-sans font-semibold text-[13px] sm:text-[17px] text-zinc-950 tracking-tight leading-snug line-clamp-1">
               {product.name}
             </h3>
           </Link>

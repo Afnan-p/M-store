@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { FloatingWhatsApp } from './components/layout/FloatingWhatsApp';
-import { SearchModal } from './components/common/SearchModal';
 import { WishlistModal } from './components/common/WishlistModal';
 import { WishlistProvider } from './context/WishlistContext';
-import { useProducts } from './hooks/useProducts';
 
 // Public Pages
 import { HomePage } from './pages/Home';
@@ -37,10 +35,7 @@ const ScrollToTop: React.FC = () => {
 };
 
 // Layout wrapper for customer facing pages vs admin portal
-const PublicLayout: React.FC<{ children: React.ReactNode; onOpenSearch: () => void }> = ({
-  children,
-  onOpenSearch,
-}) => {
+const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
 
@@ -50,7 +45,7 @@ const PublicLayout: React.FC<{ children: React.ReactNode; onOpenSearch: () => vo
 
   return (
     <div className="min-h-screen flex flex-col justify-between bg-[#FAF9F6] text-zinc-900">
-      <Navbar onOpenSearch={onOpenSearch} />
+      <Navbar />
       <main className="flex-1 pb-16 lg:pb-0">{children}</main>
       <Footer />
       <FloatingWhatsApp />
@@ -59,14 +54,11 @@ const PublicLayout: React.FC<{ children: React.ReactNode; onOpenSearch: () => vo
 };
 
 export function App() {
-  const [searchOpen, setSearchOpen] = useState(false);
-  const { products } = useProducts();
-
   return (
     <WishlistProvider>
       <Router>
         <ScrollToTop />
-        <PublicLayout onOpenSearch={() => setSearchOpen(true)}>
+        <PublicLayout>
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<HomePage />} />
@@ -91,13 +83,6 @@ export function App() {
             {/* Catch-all Fallback Route */}
             <Route path="*" element={<HomePage />} />
           </Routes>
-
-          {/* Global Live Search Modal */}
-          <SearchModal
-            isOpen={searchOpen}
-            onClose={() => setSearchOpen(false)}
-            products={products}
-          />
 
           {/* Global Wishlist Modal Drawer */}
           <WishlistModal />

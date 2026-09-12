@@ -47,7 +47,7 @@ export const Footer: React.FC = () => {
                 </div>
               </Link>
 
-              <h3 className="text-xl font-black text-zinc-900 tracking-tight leading-snug">
+              <h3 className="text-xl font-bold text-zinc-900 tracking-tight leading-snug">
                 More Than Just <span className="text-[#E50914]">iPhones.</span>
               </h3>
 

@@ -113,7 +113,7 @@ export const ProductDetailsPage: React.FC = () => {
           {/* Title & Finish */}
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="font-display text-2xl sm:text-3xl lg:text-[32px] font-bold text-zinc-950 tracking-tight leading-tight">
+              <h1 className="font-sans text-2xl sm:text-3xl lg:text-[32px] font-bold text-zinc-950 tracking-tight leading-tight">
                 {product.name}
               </h1>
               <p className="text-xs text-zinc-500 font-medium mt-1">

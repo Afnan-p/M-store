@@ -6,35 +6,34 @@ export const Hero: React.FC = () => {
     <section className="relative min-h-[82vh] sm:min-h-[85vh] lg:h-screen lg:min-h-[100dvh] w-full overflow-hidden bg-[#FAF9F6] border-b border-zinc-200/60 flex flex-col justify-between">
 
       {/* =====================================================
-          SOFT AMBIENT BACKGROUND GLOW (BEHIND PNG PRODUCT)
+          SOFT AMBIENT BACKGROUND GLOW (100% SEAMLESS BLEND - NO HARD CIRCLE)
       ====================================================== */}
       <div
         className="
           absolute
-          right-[5%] lg:right-[8%]
-          bottom-[2%] lg:bottom-[4%]
-          w-[320px] sm:w-[460px] lg:w-[560px]
-          h-[320px] sm:h-[460px] lg:h-[560px]
-          rounded-full
-          bg-[radial-gradient(circle,rgba(245,230,210,0.45)_0%,rgba(250,249,246,0)_70%)]
+          right-0
+          bottom-0
+          w-[60%]
+          h-full
+          bg-[radial-gradient(circle_at_75%_70%,rgba(245,230,210,0.35)_0%,rgba(250,249,246,0)_70%)]
           pointer-events-none
           z-0
         "
       />
 
       {/* =====================================================
-          DESKTOP RIGHT SIDE TRANSPARENT PRODUCT PNG IMAGE (SCALED UP LARGER - ONLY IMAGE)
+          DESKTOP RIGHT SIDE TRANSPARENT PRODUCT PNG IMAGE (SCALED DOWN SLIGHTLY - 20px REDUCED)
       ====================================================== */}
-      <div className="hidden lg:flex absolute right-0 bottom-0 top-28 lg:top-28 xl:top-24 w-[52%] xl:w-[56%] items-end justify-end pr-4 xl:pr-8 pointer-events-none z-10">
+      <div className="hidden lg:flex absolute right-0 bottom-0 top-[144px] lg:top-[144px] xl:top-[128px] w-[50%] xl:w-[54%] items-end justify-end pr-4 xl:pr-8 pointer-events-none z-10">
         <img
           src="/images/hero-object.png"
           alt="M Store iPhone 16 Pro"
-          className="w-full h-auto max-h-[90%] lg:max-h-[92%] xl:max-h-[95%] object-contain object-right-bottom scale-100 lg:scale-[1.05] xl:scale-[1.12] origin-bottom-right transition-transform duration-300 drop-shadow-[0_22px_55px_rgba(0,0,0,0.12)]"
+          className="w-full h-auto max-h-[86%] lg:max-h-[88%] xl:max-h-[92%] object-contain object-right-bottom scale-95 lg:scale-[1.0] xl:scale-[1.06] origin-bottom-right transition-transform duration-300 drop-shadow-[0_22px_55px_rgba(0,0,0,0.12)]"
         />
       </div>
 
       {/* =====================================================
-          HERO CONTENT CONTAINER (SHIFTED DOWNWARDS)
+          HERO CONTENT CONTAINER (REDUCED 8px GAP BELOW NAVBAR)
       ====================================================== */}
       <div
         className="
@@ -43,7 +42,7 @@ export const Hero: React.FC = () => {
           w-full max-w-[1800px]
           items-center justify-between
           px-5 sm:px-[6.5vw]
-          pt-24 sm:pt-28 lg:pt-24
+          pt-[128px] sm:pt-[144px] lg:pt-[128px]
           pb-2 lg:pb-4
         "
       >
@@ -66,14 +65,14 @@ export const Hero: React.FC = () => {
           {/* EYEBROW */}
           <div
             className="
-              mb-4 sm:mb-6 flex items-center gap-2.5
-              text-[11px] font-extrabold
+              mb-3.5 sm:mb-6 flex items-center gap-2.5
+              text-[10px] sm:text-[11px] font-extrabold
               tracking-[0.22em] text-[#E50914]
               uppercase
               animate-hero-text-smooth apple-delay-0
             "
           >
-            <span className="h-[2px] w-10 bg-[#E50914]" />
+            <span className="h-[2px] w-8 sm:w-10 bg-[#E50914]" />
             NEW · PRE-OWNED · ACCESSORIES
           </div>
 
@@ -81,20 +80,21 @@ export const Hero: React.FC = () => {
           {/* TITLE */}
           <h1
             className="
-              text-[44px]
-              font-black
-              leading-[0.95]
+              font-ds-quilter
+              text-[39px]
+              font-semibold sm:font-bold
+              leading-[1.0] sm:leading-[0.98]
               tracking-tight
               text-zinc-950
-              sm:text-[66px]
-              lg:text-[76px]
-              xl:text-[86px]
+              sm:text-[54px]
+              lg:text-[62px]
+              xl:text-[70px]
               animate-hero-text-smooth apple-delay-150
             "
           >
             More Than Just
 
-            <span className="block text-[#E50914]">
+            <span className="block text-[#E50914] font-semibold sm:font-bold">
               iPhones.
             </span>
           </h1>
@@ -103,8 +103,8 @@ export const Hero: React.FC = () => {
           {/* DESCRIPTION */}
           <p
             className="
-              mt-5 sm:mt-6 max-w-[490px]
-              text-[15px] sm:text-[18px]
+              mt-4 sm:mt-6 max-w-[490px]
+              text-[14px] sm:text-[16px]
               leading-[1.55]
               text-zinc-600
               font-medium
@@ -117,20 +117,20 @@ export const Hero: React.FC = () => {
           </p>
 
 
-          {/* CTA BUTTON */}
+          {/* CTA BUTTON (REDUCED CURVE TO ROUNDED-XL) */}
           <Link
             to="/iphones"
             className="
-              mt-6 sm:mt-8 inline-flex h-[46px] sm:h-[56px]
-              min-w-[170px] sm:min-w-[220px]
+              mt-5 sm:mt-7 inline-flex h-[42px] sm:h-[52px]
+              min-w-[155px] sm:min-w-[200px]
               items-center justify-center
-              gap-2.5 sm:gap-4
-              rounded-full
+              gap-2 sm:gap-3.5
+              rounded-xl
               bg-[#E50914]
-              px-6 sm:px-8
-              text-xs sm:text-[15px]
+              px-5 sm:px-7
+              text-xs sm:text-[14px]
               font-bold text-white
-              shadow-[0_12px_28px_rgba(229,9,20,0.3)]
+              shadow-[0_10px_24px_rgba(229,9,20,0.28)]
               transition-all
               hover:-translate-y-1
               hover:bg-red-700
@@ -141,7 +141,7 @@ export const Hero: React.FC = () => {
             "
           >
             <span>Shop iPhones</span>
-            <span className="text-base sm:text-xl">→</span>
+            <span className="text-sm sm:text-lg">→</span>
           </Link>
 
 
@@ -168,13 +168,13 @@ export const Hero: React.FC = () => {
         </div>
 
         {/* =================================================
-            MOBILE / TABLET TRANSPARENT PRODUCT PNG SHOWCASE
+            MOBILE / TABLET TRANSPARENT PRODUCT PNG SHOWCASE (REDUCED BY 4px)
         ================================================== */}
         <div className="w-full mt-6 sm:mt-8 mb-2 flex flex-col items-center justify-end lg:hidden z-20">
           <img
             src="/images/hero-object.png"
             alt="M Store iPhone 16 Pro"
-            className="w-full max-w-[310px] sm:max-w-[400px] h-auto object-contain scale-105 sm:scale-110 drop-shadow-[0_15px_35px_rgba(0,0,0,0.12)]"
+            className="w-full max-w-[326px] sm:max-w-[426px] h-auto object-contain scale-[1.04] sm:scale-105 drop-shadow-[0_15px_35px_rgba(0,0,0,0.12)] transition-transform duration-300"
           />
           <div
             className="

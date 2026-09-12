@@ -9,13 +9,19 @@ export function getWhatsAppProductLink(product: Product): string {
   }).format(product.price);
 
   const productUrl = `${window.location.origin}/product/${product.id}`;
+  const mainImage = product.images && product.images.length > 0 ? product.images[0] : '';
+  const imageUrl = mainImage
+    ? mainImage.startsWith('http')
+      ? mainImage
+      : `${window.location.origin}${mainImage}`
+    : '';
 
   const message = `Hi M STORE, I'm interested in:
 Product: ${product.name}
 Storage: ${product.storage || 'N/A'}
 Color: ${product.color || 'Default'}
 Price: ${priceFormatted}
-Product: ${productUrl}`;
+Link: ${productUrl}${imageUrl ? `\nImage: ${imageUrl}` : ''}`;
 
   return `https://wa.me/${BRAND_CONFIG.whatsappNumberClean}?text=${encodeURIComponent(message)}`;
 }

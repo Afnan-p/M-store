@@ -56,7 +56,7 @@ export const StoreLocationsSection: React.FC = () => {
             </div>
 
             {/* Main Headline with Accent Color */}
-            <h2 className="font-display text-3xl sm:text-4xl lg:text-[46px] font-black text-zinc-950 tracking-tight leading-[1.06]">
+            <h2 className="font-ds-quilter text-3xl sm:text-4xl font-bold text-zinc-950 tracking-tight leading-[1.06]">
               Visit an <br />
               <span className="text-[#B5915D]">M Store</span> <br />
               Near You.

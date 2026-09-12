@@ -12,8 +12,18 @@
   --color-m-muted: #71717A;
   --color-m-whatsapp: #25D366;
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'DS Quilter', 'IvyPresto', 'ivypresto-display', 'IvyPresto Display', 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+  --font-ds-quilter: 'DS Quilter', 'IvyPresto', 'ivypresto-display', 'IvyPresto Display', 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+  --font-ivypresto: 'IvyPresto', 'ivypresto-display', 'IvyPresto Display', 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
   --font-mauline: 'Mauline', 'Plus Jakarta Sans', 'Inter', sans-serif;
+}
+
+.font-ds-quilter {
+  font-family: 'DS Quilter', 'IvyPresto', 'ivypresto-display', 'IvyPresto Display', 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+}
+
+.font-ivypresto {
+  font-family: 'IvyPresto', 'ivypresto-display', 'IvyPresto Display', 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
 }
 
 .font-mauline {
@@ -28,8 +38,13 @@
     overflow-x: hidden;
   }
 
-  h1, h2, h3, h4, .font-display {
-    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  .font-section-heading,
+  .font-ds-quilter {
+    font-family: 'DS Quilter', 'IvyPresto', 'ivypresto-display', 'IvyPresto Display', 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   }
 }
 
@@ -127,6 +142,22 @@
 /* Keyframe Utility Classes */
 .animate-apple-fade-up {
   animation: appleFadeUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes popoverSmoothOpen {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -14px, 0) scale3d(0.96, 0.96, 1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+}
+
+.animate-popover-smooth {
+  animation: popoverSmoothOpen 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   will-change: transform, opacity;
 }
 

@@ -4,6 +4,10 @@
   "framework": "vite",
   "rewrites": [
     {
+      "source": "/product/:slug*",
+      "destination": "/api/product-og?slug=:slug*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

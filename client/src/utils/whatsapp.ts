@@ -79,14 +79,10 @@ export function getWhatsAppProductLink(product: Product, offerContext?: string):
 
   // 3. Dynamically build message lines with clean UTF-8 emojis
   const lines: string[] = [
-    "👋 Hi M Store, I'm interested in this product:",
+    "Hi M Store, I'm interested in this product:",
     '',
     `${productEmoji} Product: ${product.name}`,
   ];
-
-  if (!isAccessory && isValidField(product.storage)) {
-    lines.push(`💾 Storage: ${product.storage}`);
-  }
 
   if (isValidField(product.color)) {
     lines.push(`🎨 Color: ${product.color}`);
@@ -96,20 +92,6 @@ export function getWhatsAppProductLink(product: Product, offerContext?: string):
 
   if (offerText && offerText.trim()) {
     lines.push(`🎁 Offer: ${offerText.trim()}`);
-  }
-
-  // Include direct product photo link if available
-  const rawImage = Array.isArray(product.images) && product.images.length > 0 
-    ? product.images[0] 
-    : (product as any).image || (product as any).img;
-
-  if (rawImage && typeof rawImage === 'string' && rawImage.trim()) {
-    let fullImgUrl = rawImage.trim();
-    if (!fullImgUrl.startsWith('http://') && !fullImgUrl.startsWith('https://')) {
-      const baseUrl = getSiteBaseUrl();
-      fullImgUrl = `${baseUrl}${fullImgUrl.startsWith('/') ? '' : '/'}${fullImgUrl}`;
-    }
-    lines.push(`🖼️ Photo: ${fullImgUrl}`);
   }
 
   lines.push('');

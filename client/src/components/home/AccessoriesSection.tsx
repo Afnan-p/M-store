@@ -23,6 +23,84 @@ interface AccessoryItem {
 
 
 
+const FALLBACK_ACCESSORY_PRODUCTS: Product[] = [
+  {
+    id: 'acc_airpods_pro_2',
+    name: 'AirPods Pro (2nd Gen)',
+    model: 'AirPods Pro',
+    category: 'accessory',
+    price: 18900,
+    originalPrice: 24900,
+    storage: 'N/A',
+    condition: 'Brand New',
+    color: 'White',
+    available: true,
+    storeId: 'ALL',
+    images: ['https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?q=80&w=600&auto=format&fit=crop'],
+    description: 'USB-C • Active Noise Cancellation & Spatial Audio',
+  },
+  {
+    id: 'acc_apple_20w_charger',
+    name: 'Apple 20W USB-C Adapter',
+    model: '20W Adapter',
+    category: 'accessory',
+    price: 1890,
+    originalPrice: 2190,
+    storage: 'N/A',
+    condition: 'Brand New',
+    color: 'White',
+    available: true,
+    storeId: 'ALL',
+    images: ['https://images.unsplash.com/photo-1583863788434-e58a36330cf0?q=80&w=600&auto=format&fit=crop'],
+    description: 'Official Fast Charging Power Adapter for iPhone',
+  },
+  {
+    id: 'acc_magsafe_charger',
+    name: 'Apple MagSafe Charger',
+    model: 'MagSafe',
+    category: 'accessory',
+    price: 3890,
+    originalPrice: 4500,
+    storage: 'N/A',
+    condition: 'Brand New',
+    color: 'Silver',
+    available: true,
+    storeId: 'ALL',
+    images: ['https://images.unsplash.com/photo-1622445268465-843d61000676?q=80&w=600&auto=format&fit=crop'],
+    description: '15W Fast Wireless Charging Disk with MagSafe Magnet Alignment',
+  },
+  {
+    id: 'acc_apple_silicone_case',
+    name: 'iPhone MagSafe Silicone Case',
+    model: 'Silicone Case',
+    category: 'accessory',
+    price: 2490,
+    originalPrice: 4900,
+    storage: 'N/A',
+    condition: 'Brand New',
+    color: 'Midnight Black',
+    available: true,
+    storeId: 'ALL',
+    images: ['https://images.unsplash.com/photo-1603313011101-320f26a4f6f6?q=80&w=600&auto=format&fit=crop'],
+    description: 'Original Apple Soft-touch Silky Finish with MagSafe Support',
+  },
+  {
+    id: 'acc_apple_watch_s9',
+    name: 'Apple Watch Series 9',
+    model: 'Series 9',
+    category: 'accessory',
+    price: 34900,
+    originalPrice: 44900,
+    storage: 'N/A',
+    condition: 'Brand New',
+    color: 'Midnight Aluminum',
+    available: true,
+    storeId: 'ALL',
+    images: ['https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=600&auto=format&fit=crop'],
+    description: 'GPS 45mm • S9 Chip • Double Tap Gesture Control',
+  },
+];
+
 export const AccessoriesSection: React.FC = () => {
   const { products, loading } = useProducts();
   const { activeStoreId } = useStore();
@@ -40,10 +118,15 @@ export const AccessoriesSection: React.FC = () => {
     return p.storeId === 'ALL' || p.storeId === 'all' || p.storeId === activeStoreId;
   });
 
-  // Prioritize featured accessories first, then non-featured to fill out up to 5 cards
+  // Prioritize featured accessories first, then non-featured
   const featured = storeFiltered.filter((p) => p.featured === true);
   const nonFeatured = storeFiltered.filter((p) => !p.featured);
   const targetAccessories = [...featured, ...nonFeatured];
+
+  // Fallback chain: Store-filtered -> All DB Accessories -> Curated Essential Fallbacks
+  const finalAccessories = targetAccessories.length > 0
+    ? targetAccessories
+    : (realAccessories.length > 0 ? realAccessories : FALLBACK_ACCESSORY_PRODUCTS);
 
   // Loading state skeleton to prevent initial blank flash or lag
   if (loading) {
@@ -74,12 +157,7 @@ export const AccessoriesSection: React.FC = () => {
     );
   }
 
-  // If no accessories exist in DB for this store branch, hide section
-  if (targetAccessories.length === 0) {
-    return null;
-  }
-
-  const displayAccessories: AccessoryItem[] = targetAccessories.slice(0, 5).map((p) => ({
+  const displayAccessories: AccessoryItem[] = finalAccessories.slice(0, 5).map((p) => ({
     id: p.id,
     name: p.name,
     desc: p.description || p.subCategory || 'Apple Essential Accessory',

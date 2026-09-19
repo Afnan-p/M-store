@@ -98,6 +98,20 @@ export function getWhatsAppProductLink(product: Product, offerContext?: string):
     lines.push(`🎁 Offer: ${offerText.trim()}`);
   }
 
+  // Include direct product photo link if available
+  const rawImage = Array.isArray(product.images) && product.images.length > 0 
+    ? product.images[0] 
+    : (product as any).image || (product as any).img;
+
+  if (rawImage && typeof rawImage === 'string' && rawImage.trim()) {
+    let fullImgUrl = rawImage.trim();
+    if (!fullImgUrl.startsWith('http://') && !fullImgUrl.startsWith('https://')) {
+      const baseUrl = getSiteBaseUrl();
+      fullImgUrl = `${baseUrl}${fullImgUrl.startsWith('/') ? '' : '/'}${fullImgUrl}`;
+    }
+    lines.push(`🖼️ Photo: ${fullImgUrl}`);
+  }
+
   lines.push('');
   lines.push('🔗 Product Link:');
   lines.push(productUrl);

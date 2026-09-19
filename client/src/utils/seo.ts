@@ -19,7 +19,7 @@ function setMetaTag(propertyOrName: 'property' | 'name', attrValue: string, cont
 export function updateProductSEO(product: Product | null) {
   if (typeof document === 'undefined') return;
 
-  const defaultImg = 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=1200&auto=format&fit=crop';
+  const defaultImg = 'https://m-store-two.vercel.app/favicon.png';
 
   if (!product) {
     document.title = 'M STORE | Used & New iPhones, Accessories in Kerala';

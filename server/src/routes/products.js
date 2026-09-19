@@ -57,6 +57,73 @@ router.get('/', async (req, res) => {
   return res.json(inMemoryProducts);
 });
 
+// GET /api/products/og/:id - Serve dynamic SSR OpenGraph HTML for social link preview
+router.get('/og/:id', async (req, res) => {
+  const target = req.params.id;
+  let product = null;
+
+  try {
+    if (isDbConnected()) {
+      product = await Product.findOne({
+        $or: [{ id: target }, { slug: target }],
+      });
+      if (!product) {
+        const allDocs = await Product.find({}).lean();
+        product = allDocs.find((p) => p.id === target || p.slug === target || slugify(p.name) === target);
+      }
+    }
+  } catch (err) {
+    console.warn('MongoDB error fetching product for OG:', err.message);
+  }
+
+  if (!product) {
+    product = inMemoryProducts.find((p) => p.id === target || p.slug === target || slugify(p.name) === target);
+  }
+
+  const clientUrl = process.env.CLIENT_URL || 'https://m-store-two.vercel.app';
+  const targetSlug = product ? (product.slug || slugify(product.name) || product.id) : target;
+  const redirectUrl = `${clientUrl.replace(/\/+$/, '')}/product/${targetSlug}`;
+
+  if (!product) {
+    return res.redirect(redirectUrl);
+  }
+
+  const title = `${product.name} | M STORE Kerala`;
+  const description = product.description
+    ? product.description.slice(0, 160)
+    : `Buy ${product.name} at M STORE. Quality checked with best value warranty and fast Kerala delivery.`;
+  const imageUrl = Array.isArray(product.images) && product.images.length > 0
+    ? product.images[0]
+    : `${clientUrl}/favicon.png`;
+
+  res.setHeader('Content-Type', 'text/html');
+  return res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>${title}</title>
+  <meta name="description" content="${description}">
+  <meta property="og:title" content="${product.name}">
+  <meta property="og:description" content="${description}">
+  <meta property="og:type" content="product">
+  <meta property="og:url" content="${redirectUrl}">
+  <meta property="og:image" content="${imageUrl}">
+  <meta property="og:image:secure_url" content="${imageUrl}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${product.name}">
+  <meta name="twitter:description" content="${description}">
+  <meta name="twitter:image" content="${imageUrl}">
+  <meta http-equiv="refresh" content="0;url=${redirectUrl}">
+</head>
+<body>
+  <p>Redirecting to <a href="${redirectUrl}">${title}</a>...</p>
+  <script>window.location.href = "${redirectUrl}";</script>
+</body>
+</html>`);
+});
+
 // GET /api/products/:id - Fetch single product by ID or Slug
 router.get('/:id', async (req, res) => {
   const target = req.params.id;

@@ -19,10 +19,15 @@ function setMetaTag(propertyOrName: 'property' | 'name', attrValue: string, cont
 export function updateProductSEO(product: Product | null) {
   if (typeof document === 'undefined') return;
 
+  const defaultImg = 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=1200&auto=format&fit=crop';
+
   if (!product) {
     document.title = 'M STORE | Used & New iPhones, Accessories in Kerala';
     setMetaTag('property', 'og:title', 'M STORE | Used & New iPhones, Accessories in Kerala');
     setMetaTag('property', 'og:description', 'Premium new & quality-checked pre-owned iPhones, accessories, and instant WhatsApp support.');
+    setMetaTag('property', 'og:image', defaultImg);
+    setMetaTag('property', 'og:image:secure_url', defaultImg);
+    setMetaTag('name', 'twitter:image', defaultImg);
     return;
   }
 
@@ -32,7 +37,7 @@ export function updateProductSEO(product: Product | null) {
     : `Buy ${product.name} at M STORE. Quality checked with best value warranty and fast Kerala delivery.`;
 
   // Get primary valid Cloudinary or HTTP image URL
-  const primaryImg = product.images && product.images.length > 0 ? product.images[0] : '';
+  const primaryImg = product.images && product.images.length > 0 ? product.images[0] : defaultImg;
   const siteUrl = getProductFullUrl(product);
 
   let imageUrl = primaryImg;
@@ -47,7 +52,12 @@ export function updateProductSEO(product: Product | null) {
   setMetaTag('property', 'og:description', description);
   setMetaTag('property', 'og:type', 'product');
   setMetaTag('property', 'og:url', siteUrl);
-  if (imageUrl) {
-    setMetaTag('property', 'og:image', imageUrl);
-  }
+  setMetaTag('property', 'og:image', imageUrl);
+  setMetaTag('property', 'og:image:secure_url', imageUrl);
+  setMetaTag('property', 'og:image:width', '1200');
+  setMetaTag('property', 'og:image:height', '630');
+  setMetaTag('name', 'twitter:card', 'summary_large_image');
+  setMetaTag('name', 'twitter:title', product.name);
+  setMetaTag('name', 'twitter:description', description);
+  setMetaTag('name', 'twitter:image', imageUrl);
 }

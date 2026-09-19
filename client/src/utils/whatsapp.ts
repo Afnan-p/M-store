@@ -77,7 +77,7 @@ export function getWhatsAppProductLink(product: Product, offerContext?: string):
     }
   }
 
-  // 3. Dynamically build message lines (Omitting non-applicable fields)
+  // 3. Dynamically build message lines with clean UTF-8 emojis
   const lines: string[] = [
     "👋 Hi M Store, I'm interested in this product:",
     '',
@@ -99,7 +99,7 @@ export function getWhatsAppProductLink(product: Product, offerContext?: string):
   }
 
   lines.push('');
-  lines.push('🔗 Product:');
+  lines.push('🔗 Product Link:');
   lines.push(productUrl);
   lines.push('');
   lines.push('Please share more details.');
@@ -107,7 +107,7 @@ export function getWhatsAppProductLink(product: Product, offerContext?: string):
   const message = lines.join('\n');
 
   // Format phone number (digits only)
-  const cleanPhone = (import.meta.env.VITE_WHATSAPP_NUMBER || BRAND_CONFIG.whatsappNumberClean || '919946336587').replace(/\D/g, '');
+  const cleanPhone = (import.meta.env.VITE_WHATSAPP_NUMBER || BRAND_CONFIG.whatsappNumberClean || '918891003031').replace(/\D/g, '');
 
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 }
@@ -120,7 +120,7 @@ export function getGeneralWhatsAppLink(customMessage?: string): string {
     customMessage ||
     `👋 Hi M Store, I would like to inquire about available iPhones, pre-owned devices, offers, or showroom locations in Kerala.`;
 
-  const cleanPhone = (import.meta.env.VITE_WHATSAPP_NUMBER || BRAND_CONFIG.whatsappNumberClean || '919946336587').replace(/\D/g, '');
+  const cleanPhone = (import.meta.env.VITE_WHATSAPP_NUMBER || BRAND_CONFIG.whatsappNumberClean || '918891003031').replace(/\D/g, '');
 
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(defaultMsg)}`;
 }

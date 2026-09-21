@@ -16,9 +16,13 @@ export const AdminNewProduct: React.FC = () => {
 
     if (newProduct?.id && initialStock !== undefined) {
       const STORES = ['store001', 'store002', 'store003', 'store004'];
-      const targetStores = productData.storeId === 'ALL' || productData.storeId === 'all'
+      const pStoreIds = Array.isArray(productData.storeIds) && productData.storeIds.length > 0
+        ? productData.storeIds
+        : [productData.storeId || 'ALL'];
+
+      const targetStores = pStoreIds.includes('ALL') || pStoreIds.includes('all')
         ? STORES
-        : [productData.storeId || 'store001'];
+        : STORES.filter((sId) => pStoreIds.includes(sId));
 
       for (const sId of targetStores) {
         await StockService.updateStock({

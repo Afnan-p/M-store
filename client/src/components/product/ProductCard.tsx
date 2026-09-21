@@ -187,8 +187,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${liked ? 'fill-rose-500 text-rose-500' : ''}`} />
         </button>
 
-        {/* Product Image - Full Width Edge-to-Edge Image */}
-        <Link to={getProductPath(product)} className="w-full h-full block">
+        {/* Product Image - Full Width Container */}
+        <Link to={getProductPath(product)} className="w-full h-full flex items-center justify-center p-2 sm:p-3">
           <img
             src={product.images[0] || '/images/placeholder-iphone.svg'}
             alt={product.name}
@@ -196,7 +196,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             onError={(e) => {
               (e.target as HTMLImageElement).src = '/images/placeholder-iphone.svg';
             }}
-            className="w-full h-full object-cover object-center scale-100 group-hover:scale-[1.02] transition-transform duration-300 pointer-events-none"
+            className="max-h-full max-w-full object-contain scale-100 group-hover:scale-[1.03] transition-transform duration-300 pointer-events-none"
           />
         </Link>
       </div>

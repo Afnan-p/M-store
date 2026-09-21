@@ -60,12 +60,14 @@ router.get('/', async (req, res) => {
 
       for (const pItem of allProductItems) {
         const prodObj = prodMap.get(String(pItem.id));
-        const isSpecificStore = prodObj?.storeId && prodObj.storeId !== 'ALL' && prodObj.storeId !== 'all';
+        const pStoreIds = Array.isArray(prodObj?.storeIds) && prodObj.storeIds.length > 0
+          ? prodObj.storeIds
+          : (prodObj?.storeId ? [prodObj.storeId] : ['ALL']);
+        const isAllStores = pStoreIds.some((id) => id === 'ALL' || id === 'all');
         const pStoreLower = String(prodObj?.storeId || '').toLowerCase();
 
         for (const sId of STORES) {
-          const isMatch = !isSpecificStore || (
-            prodObj?.storeId === sId ||
+          const isMatch = isAllStores || pStoreIds.includes(sId) || (
             (sId === 'store001' && pStoreLower.includes('kootanad')) ||
             (sId === 'store002' && pStoreLower.includes('kecheri')) ||
             (sId === 'store003' && pStoreLower.includes('mattom')) ||
@@ -99,16 +101,21 @@ router.get('/', async (req, res) => {
       // Filter out dummy unassigned stock entries for products assigned to specific stores
       const cleanedStockRecords = allStockRecords.filter((s) => {
         const p = prodMap.get(String(s.productId));
-        if (p && p.storeId && p.storeId !== 'ALL' && p.storeId !== 'all') {
-          const pStoreLower = String(p.storeId).toLowerCase();
-          const isMatch = (
-            p.storeId === s.storeId ||
-            (s.storeId === 'store001' && pStoreLower.includes('kootanad')) ||
-            (s.storeId === 'store002' && pStoreLower.includes('kecheri')) ||
-            (s.storeId === 'store003' && pStoreLower.includes('mattom')) ||
-            (s.storeId === 'store004' && pStoreLower.includes('pattambi'))
-          );
-          if (!isMatch) return false;
+        if (p) {
+          const pStoreIds = Array.isArray(p.storeIds) && p.storeIds.length > 0
+            ? p.storeIds
+            : (p.storeId ? [p.storeId] : ['ALL']);
+          const isAllStores = pStoreIds.some((id) => id === 'ALL' || id === 'all');
+          if (!isAllStores) {
+            const pStoreLower = String(p.storeId || '').toLowerCase();
+            const isMatch = pStoreIds.includes(s.storeId) || (
+              (s.storeId === 'store001' && pStoreLower.includes('kootanad')) ||
+              (s.storeId === 'store002' && pStoreLower.includes('kecheri')) ||
+              (s.storeId === 'store003' && pStoreLower.includes('mattom')) ||
+              (s.storeId === 'store004' && pStoreLower.includes('pattambi'))
+            );
+            if (!isMatch) return false;
+          }
         }
         return true;
       });

@@ -35,7 +35,14 @@ router.get('/', async (req, res) => {
       const filter = {};
       if (category) filter.category = category;
       if (storeId && storeId !== 'ALL' && storeId !== 'all') {
-        filter.$or = [{ storeId: storeId }, { storeId: 'ALL' }, { storeId: 'all' }];
+        filter.$or = [
+          { storeId: storeId },
+          { storeIds: storeId },
+          { storeId: 'ALL' },
+          { storeId: 'all' },
+          { storeIds: 'ALL' },
+          { storeIds: 'all' },
+        ];
       }
       if (available !== undefined) {
         filter.available = available === 'true';
@@ -151,10 +158,14 @@ router.get('/:id', async (req, res) => {
 
 // POST /api/products - Create new product (Admin Only)
 router.post('/', protect, adminOnly, async (req, res) => {
+  const rawStoreIds = Array.isArray(req.body.storeIds) ? req.body.storeIds : [req.body.storeId || 'ALL'];
+  const finalStoreIds = rawStoreIds.length > 0 ? rawStoreIds : ['ALL'];
+
   const newProduct = {
     ...req.body,
     slug: req.body.slug || slugify(req.body.name || ''),
-    storeId: req.body.storeId || 'ALL',
+    storeId: finalStoreIds.includes('ALL') ? 'ALL' : (finalStoreIds[0] || 'ALL'),
+    storeIds: finalStoreIds,
     id: req.body.id || 'p_' + Date.now(),
     createdAt: req.body.createdAt || new Date().toISOString(),
   };
@@ -168,18 +179,11 @@ router.post('/', protect, adminOnly, async (req, res) => {
     if (isDbConnected()) {
       const created = await Product.create(newProduct);
 
-      const isSpecificStore = newProduct.storeId && newProduct.storeId !== 'ALL' && newProduct.storeId !== 'all';
+      const isAllStores = finalStoreIds.includes('ALL') || finalStoreIds.includes('all');
 
       // Auto-create ProductStock records in MongoDB ONLY for assigned store(s)
       for (const storeId of STORES) {
-        const pStoreLower = String(newProduct.storeId).toLowerCase();
-        const isMatch = !isSpecificStore || (
-          newProduct.storeId === storeId ||
-          (storeId === 'store001' && pStoreLower.includes('kootanad')) ||
-          (storeId === 'store002' && pStoreLower.includes('kecheri')) ||
-          (storeId === 'store003' && pStoreLower.includes('mattom')) ||
-          (storeId === 'store004' && pStoreLower.includes('pattambi'))
-        );
+        const isMatch = isAllStores || finalStoreIds.includes(storeId);
 
         if (isMatch) {
           await ProductStock.findOneAndUpdate(

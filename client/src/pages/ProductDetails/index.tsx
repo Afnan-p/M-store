@@ -95,20 +95,16 @@ export const ProductDetailsPage: React.FC = () => {
       setStockNum(qty);
 
       const breakdown = await StockService.getProductStockBreakdown(product.id);
-      const isSpecificStore = Boolean(product.storeId && product.storeId !== 'ALL' && product.storeId !== 'all');
+      const pStoreIds = Array.isArray(product.storeIds) && product.storeIds.length > 0
+        ? product.storeIds
+        : (product.storeId ? [product.storeId] : ['ALL']);
+      const isAllStores = pStoreIds.some((id) => id === 'ALL' || id === 'all');
 
       let formatted = stores.map((s) => {
         const match = breakdown.find((b) => b.storeId === s.id);
         let stockVal = match ? Math.max(0, match.stock) : 10;
 
-        const sNameLower = s.name.toLowerCase();
-        const pStoreLower = String(product.storeId || '').toLowerCase();
-        const isMatch = !isSpecificStore || (
-          s.id === product.storeId ||
-          sNameLower.includes(pStoreLower) ||
-          pStoreLower.includes(sNameLower) ||
-          (s.name.includes('-') && product.storeId!.includes('-') && s.name.split('-')[1].trim().toLowerCase() === product.storeId!.split('-')[1].trim().toLowerCase())
-        );
+        const isMatch = isAllStores || pStoreIds.includes(s.id);
 
         return {
           storeId: s.id,
@@ -118,7 +114,7 @@ export const ProductDetailsPage: React.FC = () => {
         };
       });
 
-      if (isSpecificStore) {
+      if (!isAllStores) {
         formatted = formatted.filter((item) => item.isAssignedStore);
       }
 
@@ -489,80 +485,24 @@ export const ProductDetailsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Description & Technical Specs - Balanced Layout */}
-      <div className="pt-10 sm:pt-14 border-t border-zinc-200/80">
-        {product.description && product.description.trim() ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            <div className="lg:col-span-7 space-y-3">
-              <h3 className="font-ds-quilter text-xl sm:text-2xl font-bold text-zinc-950 tracking-tight">Why Choose This Device?</h3>
-              <div className="text-xs sm:text-sm text-zinc-600 font-normal leading-relaxed whitespace-pre-line bg-white p-6 rounded-2xl border border-zinc-200/80 shadow-xs">
-                {product.description}
-              </div>
-            </div>
-
-            <div className="lg:col-span-5 space-y-3">
-              <h3 className="font-ds-quilter text-xl sm:text-2xl font-bold text-zinc-950 tracking-tight">Device Specifications</h3>
-              <div className="bg-white border border-zinc-200/80 rounded-2xl p-6 space-y-2.5 text-xs shadow-xs">
-                <div className="flex justify-between py-2 border-b border-zinc-100">
-                  <span className="text-zinc-500 font-normal">Model Series</span>
-                  <span className="text-zinc-950 font-semibold">{product.model}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-zinc-100">
-                  <span className="text-zinc-500 font-normal">Storage Option</span>
-                  <span className="text-zinc-950 font-semibold">{product.storage}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-zinc-100">
-                  <span className="text-zinc-500 font-normal">Condition Grade</span>
-                  <span className="text-zinc-950 font-semibold">{product.condition}</span>
-                </div>
-                {isUsed && product.batteryHealth && (
-                  <div className="flex justify-between py-2 border-b border-zinc-100">
-                    <span className="text-zinc-500 font-normal">Battery Health</span>
-                    <span className="text-emerald-600 font-bold">{product.batteryHealth}%</span>
-                  </div>
-                )}
-                <div className="flex justify-between py-2">
-                  <span className="text-zinc-500 font-normal">Warranty Included</span>
-                  <span className="text-[#E50914] font-semibold">{product.warranty || 'Store Warranty'}</span>
-                </div>
-              </div>
-            </div>
+      {/* Overview & Store Notes (Only if description is provided) */}
+      {product.description && product.description.trim() ? (
+        <div className="pt-8 sm:pt-12 border-t border-zinc-200/80 space-y-3">
+          <h3 className="font-ds-quilter text-xl sm:text-2xl font-bold text-zinc-950 tracking-tight">
+            {product.category === 'accessory' ? 'Overview & Accessory Notes' : 'Why Choose This Device?'}
+          </h3>
+          <div className="text-xs sm:text-sm text-zinc-600 font-normal leading-relaxed whitespace-pre-line bg-white p-5 sm:p-6 rounded-2xl border border-zinc-200/80 shadow-xs">
+            {product.description}
           </div>
-        ) : (
-          <div className="max-w-2xl space-y-3">
-            <h3 className="font-ds-quilter text-xl sm:text-2xl font-bold text-zinc-950 tracking-tight">Device Specifications</h3>
-            <div className="bg-white border border-zinc-200/80 rounded-2xl p-6 space-y-2.5 text-xs shadow-xs">
-              <div className="flex justify-between py-2 border-b border-zinc-100">
-                <span className="text-zinc-500 font-normal">Model Series</span>
-                <span className="text-zinc-950 font-semibold">{product.model}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-zinc-100">
-                <span className="text-zinc-500 font-normal">Storage Option</span>
-                <span className="text-zinc-950 font-semibold">{product.storage}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-zinc-100">
-                <span className="text-zinc-500 font-normal">Condition Grade</span>
-                <span className="text-zinc-950 font-semibold">{product.condition}</span>
-              </div>
-              {isUsed && product.batteryHealth && (
-                <div className="flex justify-between py-2 border-b border-zinc-100">
-                  <span className="text-zinc-500 font-normal">Battery Health</span>
-                  <span className="text-emerald-600 font-bold">{product.batteryHealth}%</span>
-                </div>
-              )}
-              <div className="flex justify-between py-2">
-                <span className="text-zinc-500 font-normal">Warranty Included</span>
-                <span className="text-[#E50914] font-semibold">{product.warranty || 'Store Warranty'}</span>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
+      ) : null}
 
-      {/* Related Devices */}
+      {/* Related Devices / Accessories */}
       {relatedProducts.length > 0 && (
-        <div className="space-y-5 pt-10 sm:pt-14 border-t border-zinc-200/80">
-          <h3 className="font-ds-quilter text-xl sm:text-2xl font-bold text-zinc-950 tracking-tight">Related Devices</h3>
+        <div className="space-y-5 pt-8 sm:pt-12 border-t border-zinc-200/80">
+          <h3 className="font-ds-quilter text-xl sm:text-2xl font-bold text-zinc-950 tracking-tight">
+            Related {product.category === 'accessory' ? 'Accessories' : 'Devices'}
+          </h3>
           <ProductGrid products={relatedProducts} />
         </div>
       )}

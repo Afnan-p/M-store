@@ -228,7 +228,13 @@ export const AdminProducts: React.FC = () => {
                 </tr>
               ) : (
                 filtered.map((product) => {
-                  const assignedStore = stores.find((s) => s.id === (product.storeId || 'store001'));
+                  const pStoreIds = Array.isArray(product.storeIds) && product.storeIds.length > 0
+                    ? product.storeIds
+                    : [product.storeId || 'ALL'];
+                  const isAllStores = pStoreIds.includes('ALL') || pStoreIds.includes('all');
+                  const assignedStores = isAllStores
+                    ? []
+                    : stores.filter((s) => pStoreIds.includes(s.id));
 
                   return (
                     <tr key={product.id} className="hover:bg-zinc-50">
@@ -253,12 +259,25 @@ export const AdminProducts: React.FC = () => {
                         </div>
                       </td>
                       <td className="p-4">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-zinc-100 text-zinc-800 border border-zinc-200">
-                          <StoreIcon className="w-3 h-3 text-[#E50914]" />
-                          {product.storeId === 'ALL' || product.storeId === 'all'
-                            ? 'All Stores'
-                            : assignedStore?.name || product.storeId || 'Store 1'}
-                        </span>
+                        {isAllStores ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-zinc-100 text-zinc-800 border border-zinc-200">
+                            <StoreIcon className="w-3 h-3 text-[#E50914]" />
+                            All Stores
+                          </span>
+                        ) : assignedStores.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {assignedStores.map((s) => (
+                              <span key={s.id} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-[#E50914] border border-red-200">
+                                <StoreIcon className="w-2.5 h-2.5" />
+                                {s.name}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-zinc-100 text-zinc-700 border border-zinc-200">
+                            {product.storeId || 'Store 1'}
+                          </span>
+                        )}
                       </td>
                       <td className="p-4">
                         {product.category === 'iphone-used' && <Badge variant="used">Pre-Owned</Badge>}

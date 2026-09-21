@@ -53,6 +53,11 @@ const productSchema = new mongoose.Schema(
       required: true,
       default: 'store001',
     },
+    storeIds: [
+      {
+        type: String,
+      },
+    ],
     images: [
       {
         type: String,

@@ -99,24 +99,25 @@ export function useProducts() {
         filters.storeId !== 'all' &&
         filters.storeId !== 'ALL'
       ) {
-        if (!p.storeId || p.storeId === 'ALL' || p.storeId === 'all') {
-          // Available in all stores
-        } else {
-          const pStore = p.storeId.toLowerCase();
-          const fStore = filters.storeId.toLowerCase();
-          const isMatch =
-            pStore === fStore ||
-            (fStore === 'store001' && pStore.includes('kootanad')) ||
-            (fStore === 'store002' && pStore.includes('kecheri')) ||
-            (fStore === 'store003' && pStore.includes('mattom')) ||
-            (fStore === 'store004' && pStore.includes('pattambi')) ||
-            (pStore === 'store001' && fStore.includes('kootanad')) ||
-            (pStore === 'store002' && fStore.includes('kecheri')) ||
-            (pStore === 'store003' && fStore.includes('mattom')) ||
-            (pStore === 'store004' && fStore.includes('pattambi'));
+        const fStore = filters.storeId.toLowerCase();
+        const pStore = (p.storeId || '').toLowerCase();
+        const pStoreIds = (p.storeIds || []).map((s) => s.toLowerCase());
 
-          if (!isMatch) return false;
-        }
+        const isAll = pStore === 'all' || pStoreIds.includes('all');
+        const isMatch =
+          isAll ||
+          pStore === fStore ||
+          pStoreIds.includes(fStore) ||
+          (fStore === 'store001' && (pStore.includes('kootanad') || pStoreIds.some((s) => s.includes('kootanad')))) ||
+          (fStore === 'store002' && (pStore.includes('kecheri') || pStoreIds.some((s) => s.includes('kecheri')))) ||
+          (fStore === 'store003' && (pStore.includes('mattom') || pStoreIds.some((s) => s.includes('mattom')))) ||
+          (fStore === 'store004' && (pStore.includes('pattambi') || pStoreIds.some((s) => s.includes('pattambi')))) ||
+          (pStore === 'store001' && fStore.includes('kootanad')) ||
+          (pStore === 'store002' && fStore.includes('kecheri')) ||
+          (pStore === 'store003' && fStore.includes('mattom')) ||
+          (pStore === 'store004' && fStore.includes('pattambi'));
+
+        if (!isMatch) return false;
       }
 
       // Availability filter

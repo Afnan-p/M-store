@@ -27,6 +27,7 @@ export interface Product {
   segmentSlug?: string;
   subCategory?: string;
   storeId?: string;
+  storeIds?: string[];
   category: CategoryType;
   price: number;
   originalPrice?: number;

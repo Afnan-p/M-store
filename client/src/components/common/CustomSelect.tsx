@@ -19,6 +19,7 @@ interface CustomSelectProps {
   dropdownClassName?: string;
   size?: 'sm' | 'md';
   align?: 'left' | 'right';
+  fullWidth?: boolean;
 }
 
 export const CustomSelect: React.FC<CustomSelectProps> = ({
@@ -32,6 +33,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   dropdownClassName = '',
   size = 'md',
   align = 'left',
+  fullWidth = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -69,13 +71,13 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   const isSmall = size === 'sm';
 
   return (
-    <div ref={containerRef} className={`relative inline-block text-left ${isOpen ? 'z-40' : 'z-10'} ${className}`}>
+    <div ref={containerRef} className={`relative ${fullWidth ? 'w-full' : 'inline-block'} text-left ${isOpen ? 'z-40' : 'z-10'} ${className}`}>
       {/* Select Trigger Button */}
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         className={`w-full flex items-center justify-between gap-2 bg-white border border-zinc-200 hover:border-zinc-300 rounded-xl transition-all duration-200 text-zinc-900 font-semibold cursor-pointer shadow-2xs hover:bg-zinc-50/80 focus:outline-none focus:ring-2 focus:ring-[#E50914]/20 ${
-          isSmall ? 'px-2.5 py-1.5 text-[11px]' : 'px-3.5 py-2 text-xs'
+          isSmall ? 'px-2.5 py-1.5 text-[11px]' : 'px-3.5 py-2.5 text-xs'
         } ${buttonClassName}`}
       >
         <div className="flex items-center gap-2 truncate">
@@ -92,7 +94,9 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       {/* Custom Animated Dropdown Popover */}
       {isOpen && (
         <div
-          className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} top-full mt-1.5 z-50 min-w-[160px] max-w-[280px] bg-white border border-zinc-200 shadow-xl rounded-2xl p-1.5 space-y-0.5 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150 ${dropdownClassName}`}
+          className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} top-full mt-1.5 z-50 ${
+            fullWidth ? 'w-full min-w-full' : 'min-w-[160px] max-w-[280px]'
+          } bg-white border border-zinc-200 shadow-xl rounded-2xl p-1.5 space-y-0.5 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150 ${dropdownClassName}`}
         >
           <div className="max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-200">
             {options.map((opt) => {

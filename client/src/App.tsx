@@ -1,5 +1,5 @@
 import React, { useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { FloatingWhatsApp } from './components/layout/FloatingWhatsApp';
@@ -18,7 +18,7 @@ import { AboutPage } from './pages/About';
 import { ContactPage } from './pages/Contact';
 import { StoresPage } from './pages/Stores';
 
-// Lazy Loaded Admin Routes for Code Splitting & Performance Optimization
+// Lazy Loaded Admin Management Portal Routes
 const AdminLogin = lazy(() => import('./pages/Admin/AdminLogin').then((m) => ({ default: m.AdminLogin })));
 const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard').then((m) => ({ default: m.AdminDashboard })));
 const AdminProducts = lazy(() => import('./pages/Admin/AdminProducts').then((m) => ({ default: m.AdminProducts })));
@@ -52,7 +52,7 @@ const ScrollToTop: React.FC = () => {
 // Layout wrapper for customer facing pages vs admin portal
 const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
-  const isAdminRoute = location.pathname.startsWith('/admin');
+  const isAdminRoute = location.pathname.startsWith('/mstore-management-portal');
 
   if (isAdminRoute) {
     return <>{children}</>;
@@ -90,17 +90,22 @@ export function App() {
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/stores" element={<StoresPage />} />
 
-                {/* Admin Routes (Code-Split) */}
-                <Route path="/admin/login" element={<AdminLogin />} />
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/products" element={<AdminProducts />} />
-                <Route path="/admin/stock" element={<AdminStockPage />} />
-                <Route path="/admin/offer-products" element={<AdminOfferProducts />} />
-                <Route path="/admin/offers" element={<AdminOffers />} />
-                <Route path="/admin/segments" element={<AdminSegments />} />
-                <Route path="/admin/stores" element={<AdminStores />} />
-                <Route path="/admin/products/new" element={<AdminNewProduct />} />
-                <Route path="/admin/products/:id/edit" element={<AdminEditProduct />} />
+                {/* Redirect old /admin routes to customer homepage without exposing portal */}
+                <Route path="/admin" element={<Navigate to="/" replace />} />
+                <Route path="/admin/*" element={<Navigate to="/" replace />} />
+
+                {/* Production Admin Management Portal Routes */}
+                <Route path="/mstore-management-portal/login" element={<AdminLogin />} />
+                <Route path="/mstore-management-portal" element={<AdminDashboard />} />
+                <Route path="/mstore-management-portal/products" element={<AdminProducts />} />
+                <Route path="/mstore-management-portal/stock" element={<AdminStockPage />} />
+                <Route path="/mstore-management-portal/offer-products" element={<AdminOfferProducts />} />
+                <Route path="/mstore-management-portal/offers" element={<AdminOffers />} />
+                <Route path="/mstore-management-portal/segments" element={<AdminSegments />} />
+                <Route path="/mstore-management-portal/stores" element={<AdminStores />} />
+                <Route path="/mstore-management-portal/products/new" element={<AdminNewProduct />} />
+                <Route path="/mstore-management-portal/products/:id/edit" element={<AdminEditProduct />} />
+
                 {/* Catch-all Fallback Route */}
                 <Route path="*" element={<HomePage />} />
               </Routes>

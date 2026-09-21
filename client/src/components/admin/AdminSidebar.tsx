@@ -15,19 +15,19 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen = false, onCl
 
   const handleLogout = async () => {
     await logout();
-    navigate('/admin/login');
+    navigate('/mstore-management-portal/login');
   };
 
   const navItems = [
-    { label: 'Overview', path: '/admin', icon: <LayoutDashboard className="w-4 h-4" /> },
-    { label: 'All Products', path: '/admin/products', icon: <Package className="w-4 h-4" /> },
-    { label: 'Products Stock', path: '/admin/stock', icon: <Layers className="w-4 h-4" /> },
-    { label: 'Offer Products', path: '/admin/offer-products', icon: <Gift className="w-4 h-4" /> },
-    { label: 'Offers', path: '/admin/offers', icon: <Sparkles className="w-4 h-4" /> },
-    { label: 'Showroom Stores', path: '/admin/stores', icon: <Store className="w-4 h-4" /> },
-    { label: 'iPhone Segments', path: '/admin/segments', icon: <Layers className="w-4 h-4" /> },
-    { label: 'Add New iPhone', path: '/admin/products/new?type=iphone', icon: <Smartphone className="w-4 h-4" /> },
-    { label: 'Add Accessory', path: '/admin/products/new?type=accessory', icon: <Headphones className="w-4 h-4" /> },
+    { label: 'Overview', path: '/mstore-management-portal', icon: <LayoutDashboard className="w-4 h-4" /> },
+    { label: 'All Products', path: '/mstore-management-portal/products', icon: <Package className="w-4 h-4" /> },
+    { label: 'Products Stock', path: '/mstore-management-portal/stock', icon: <Layers className="w-4 h-4" /> },
+    { label: 'Offer Products', path: '/mstore-management-portal/offer-products', icon: <Gift className="w-4 h-4" /> },
+    { label: 'Offers', path: '/mstore-management-portal/offers', icon: <Sparkles className="w-4 h-4" /> },
+    { label: 'Showroom Stores', path: '/mstore-management-portal/stores', icon: <Store className="w-4 h-4" /> },
+    { label: 'iPhone Segments', path: '/mstore-management-portal/segments', icon: <Layers className="w-4 h-4" /> },
+    { label: 'Add New iPhone', path: '/mstore-management-portal/products/new?type=iphone', icon: <Smartphone className="w-4 h-4" /> },
+    { label: 'Add Accessory', path: '/mstore-management-portal/products/new?type=accessory', icon: <Headphones className="w-4 h-4" /> },
   ];
 
   const sidebarContent = (

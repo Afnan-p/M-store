@@ -100,13 +100,13 @@ export const AdminOffers: React.FC = () => {
       subtitle="Overview of main products with active free offer packages."
       action={
         <div className="flex items-center gap-2">
-          <Link to="/admin/offer-products">
+          <Link to="/mstore-management-portal/offer-products">
             <button className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 border border-zinc-200 text-zinc-800 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5">
               <Gift className="w-3.5 h-3.5 text-[#E50914]" />
               <span>Manage Offer Products</span>
             </button>
           </Link>
-          <Link to="/admin/products/new?type=iphone">
+          <Link to="/mstore-management-portal/products/new?type=iphone">
             <button className="px-4 py-2 bg-[#E50914] text-white hover:bg-red-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
               <Plus className="w-3.5 h-3.5" />
               <span>Add iPhone + Offer</span>
@@ -318,7 +318,7 @@ export const AdminOffers: React.FC = () => {
                     </button>
 
                     <Link
-                      to={`/admin/products/${product.id}/edit`}
+                      to={`/mstore-management-portal/products/${product.id}/edit`}
                       className="px-4 py-1.5 bg-[#E50914] hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shadow-xs"
                     >
                       <Edit className="w-3.5 h-3.5" />

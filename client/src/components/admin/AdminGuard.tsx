@@ -22,7 +22,7 @@ export const AdminGuard: React.FC<AdminGuardProps> = ({ children }) => {
   }
 
   if (!user) {
-    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+    return <Navigate to="/mstore-management-portal/login" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;

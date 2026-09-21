@@ -98,12 +98,12 @@ export const AdminDashboard: React.FC = () => {
       subtitle="Real-time stock metrics, showroom inventory breakdown, pre-owned & new iPhone arrivals, and accessories."
       action={
         <div className="flex items-center gap-2">
-          <Link to="/admin/products/new?type=iphone">
+          <Link to="/mstore-management-portal/products/new?type=iphone">
             <Button size="sm" variant="primary" icon={<Plus className="w-4 h-4" />}>
               Add iPhone
             </Button>
           </Link>
-          <Link to="/admin/products/new?type=accessory">
+          <Link to="/mstore-management-portal/products/new?type=accessory">
             <Button
               size="sm"
               variant="secondary"
@@ -228,7 +228,7 @@ export const AdminDashboard: React.FC = () => {
             <Sparkles className="w-4 h-4 text-[#E50914]" />
             <h3 className="text-sm font-bold text-zinc-900">Physical Store Inventory Status</h3>
           </div>
-          <Link to="/admin/stock" className="text-xs text-[#E50914] font-semibold hover:underline">
+          <Link to="/mstore-management-portal/stock" className="text-xs text-[#E50914] font-semibold hover:underline">
             Manage Products Stock →
           </Link>
         </div>
@@ -298,7 +298,7 @@ export const AdminDashboard: React.FC = () => {
             </p>
           </div>
           <Link
-            to="/admin/stock"
+            to="/mstore-management-portal/stock"
             className="text-xs text-[#E50914] font-semibold hover:underline flex items-center gap-1"
           >
             <span>View Full Stock Catalog</span>

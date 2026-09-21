@@ -75,22 +75,22 @@ export const AdminProducts: React.FC = () => {
       subtitle="Manage device listings, store-based accessories, prices, showroom store assignments, and stock status."
       action={
         <div className="flex items-center gap-3">
-          <Link to="/admin/stores">
+          <Link to="/mstore-management-portal/stores">
             <Button size="sm" variant="secondary" icon={<StoreIcon className="w-4 h-4" />}>
               Showroom Stores
             </Button>
           </Link>
-          <Link to="/admin/segments">
+          <Link to="/mstore-management-portal/segments">
             <Button size="sm" variant="secondary" icon={<Layers className="w-4 h-4" />}>
               iPhone Segments
             </Button>
           </Link>
-          <Link to="/admin/products/new?type=iphone">
+          <Link to="/mstore-management-portal/products/new?type=iphone">
             <Button size="sm" variant="primary" icon={<Plus className="w-4 h-4" />}>
               Add iPhone
             </Button>
           </Link>
-          <Link to="/admin/products/new?type=accessory">
+          <Link to="/mstore-management-portal/products/new?type=accessory">
             <Button size="sm" variant="secondary" className="bg-zinc-900 text-white hover:bg-black" icon={<Plus className="w-4 h-4" />}>
               Add Accessory
             </Button>
@@ -288,7 +288,7 @@ export const AdminProducts: React.FC = () => {
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Link
-                            to={`/admin/products/${product.id}/edit`}
+                            to={`/mstore-management-portal/products/${product.id}/edit`}
                             className="p-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-lg transition-colors border border-zinc-200"
                             title="Edit product"
                           >

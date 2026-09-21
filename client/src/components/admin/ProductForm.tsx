@@ -231,7 +231,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           items: offerEnabled ? offerItems : [],
         },
       });
-      navigate('/admin/products');
+      navigate('/mstore-management-portal/products');
     } catch (err) {
       console.error('Submit error:', err);
     } finally {

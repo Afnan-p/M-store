@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { Button } from '../../components/common/Button';
-import { Lock, Mail, AlertCircle } from 'lucide-react';
+import { Lock, Mail, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 export const AdminLogin: React.FC = () => {
-  const [email, setEmail] = useState('admin@mstore.in');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +21,7 @@ export const AdminLogin: React.FC = () => {
 
     try {
       await login(email, password);
-      navigate('/admin');
+      navigate('/mstore-management-portal');
     } catch (err: any) {
       setError(err.message || 'Login failed. Check credentials.');
     } finally {
@@ -35,10 +36,22 @@ export const AdminLogin: React.FC = () => {
 
       <div className="w-full max-w-md bg-white border border-zinc-200 p-8 rounded-3xl space-y-6 shadow-2xl relative z-10">
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-[#E50914] flex items-center justify-center text-white font-black text-2xl mx-auto shadow-lg shadow-[#E50914]/20">
-            M
+          <div className="w-16 h-16 rounded-2xl bg-black overflow-hidden flex items-center justify-center border border-zinc-800 mx-auto shadow-lg shadow-zinc-950/20 shrink-0">
+            <img
+              src="/images/mstore-logo.jpg"
+              alt="M Store Logo"
+              className="w-full h-full object-cover p-0.5"
+            />
           </div>
-          <h1 className="text-2xl font-extrabold text-zinc-900 tracking-tight">M STORE Admin Portal</h1>
+          
+          <div className="flex items-center justify-center gap-2 pt-1">
+            <img
+              src="/images/M-store-word.png"
+              alt="mStore"
+              className="h-8 w-auto object-contain mix-blend-multiply"
+            />
+            <span className="text-xl font-black text-zinc-900 tracking-tight">Admin Portal</span>
+          </div>
           <p className="text-xs text-zinc-500">Enter your credentials to manage store inventory.</p>
         </div>
 
@@ -59,6 +72,7 @@ export const AdminLogin: React.FC = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter admin email..."
                 className="w-full pl-10 pr-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs text-zinc-900 focus:outline-none focus:border-[#E50914]"
               />
             </div>
@@ -69,12 +83,21 @@ export const AdminLogin: React.FC = () => {
             <div className="relative">
               <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs text-zinc-900 focus:outline-none focus:border-[#E50914]"
+                placeholder="Enter password..."
+                className="w-full pl-10 pr-10 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs text-zinc-900 focus:outline-none focus:border-[#E50914]"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 transition-colors p-1"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 
@@ -82,10 +105,6 @@ export const AdminLogin: React.FC = () => {
             {loading ? 'Authenticating...' : 'Sign In to Dashboard'}
           </Button>
         </form>
-
-        <div className="pt-4 border-t border-zinc-200 text-center text-[11px] text-zinc-500">
-          Demo Credentials pre-filled: <span className="text-zinc-800 font-mono">admin@mstore.in / admin123</span>
-        </div>
       </div>
     </div>
   );

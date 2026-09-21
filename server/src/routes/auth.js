@@ -12,49 +12,69 @@ const generateToken = (id, role) => {
   );
 };
 
+const path = require('path');
+const dotenv = require('dotenv');
+
 // POST /api/auth/login - Admin Login Endpoint
 router.post('/login', async (req, res) => {
+  dotenv.config({ path: path.resolve(__dirname, '../../.env') });
   const { email, password } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ message: 'Email and password are required' });
   }
 
-  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedEmail = String(email).trim().toLowerCase();
+  const cleanPassword = String(password).trim();
 
   try {
-    // 1. Try finding registered admin in MongoDB Atlas
-    const user = await User.findOne({ email: normalizedEmail });
-    if (user && (await bcrypt.compare(password, user.password))) {
-      const token = generateToken(user._id, user.role);
-      return res.json({
-        success: true,
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        },
-        token,
-      });
+    // 1. Production Admin Credentials check via Environment Variables
+    const envAdminEmail = process.env.ADMIN_EMAIL ? process.env.ADMIN_EMAIL.trim().toLowerCase() : null;
+    const envAdminPassword = process.env.ADMIN_PASSWORD ? process.env.ADMIN_PASSWORD.trim() : null;
+
+    if (!envAdminEmail || !envAdminPassword) {
+      console.warn('[Auth Warning] Admin credentials are not configured in environment variables.');
     }
 
-    // 2. Controlled fallback using configurable Environment Variables
-    const defaultAdminEmail = (process.env.ADMIN_EMAIL || 'admin@mstore.in').toLowerCase();
-    const defaultAdminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+    // If submitted email matches configured ADMIN_EMAIL, strictly validate against ADMIN_PASSWORD only
+    if (envAdminEmail && normalizedEmail === envAdminEmail) {
+      if (envAdminPassword && cleanPassword === envAdminPassword) {
+        const token = generateToken('admin_env', 'admin');
+        return res.json({
+          success: true,
+          user: {
+            id: 'admin_env',
+            name: 'M Store Manager',
+            email: envAdminEmail,
+            role: 'admin',
+          },
+          token,
+        });
+      }
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
 
-    if (normalizedEmail === defaultAdminEmail && password === defaultAdminPassword) {
-      const token = generateToken('admin_001', 'admin');
-      return res.json({
-        success: true,
-        user: {
-          id: 'admin_001',
-          name: 'M Store Manager',
-          email: defaultAdminEmail,
-          role: 'admin',
-        },
-        token,
-      });
+    // 2. MongoDB Admin User check (for custom database admin accounts)
+    const user = await User.findOne({ email: normalizedEmail });
+    if (user) {
+      // Explicitly reject any legacy demo password
+      if (password === 'admin123') {
+        return res.status(401).json({ message: 'Invalid email or password' });
+      }
+
+      if (await bcrypt.compare(password, user.password)) {
+        const token = generateToken(user._id, user.role);
+        return res.json({
+          success: true,
+          user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          },
+          token,
+        });
+      }
     }
 
     return res.status(401).json({ message: 'Invalid email or password' });

@@ -170,7 +170,7 @@ export const AccessoriesSection: React.FC = () => {
 
   return (
     <section ref={ref} className="py-9 sm:py-12 lg:py-11 bg-white border-b border-zinc-200/60">
-      <div className={`max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 space-y-7 ${isVisible ? 'opacity-100 transition-opacity duration-300' : 'opacity-90'}`}>
+      <div className={`max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 space-y-7 reveal-hidden ${isVisible ? 'reveal-visible' : ''}`}>
         
         {/* Section Header */}
         <div className="flex items-end justify-between gap-4 apple-reveal-item" style={{ transitionDelay: '0ms' }}>

@@ -36,7 +36,7 @@ const FALLBACK_ACCESSORY_PRODUCTS: Product[] = [
     color: 'White',
     available: true,
     storeId: 'ALL',
-    images: ['https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?q=80&w=600&auto=format&fit=crop'],
+    images: ['/images/cat-accessories.png'],
     description: 'USB-C • Active Noise Cancellation & Spatial Audio',
   },
   {
@@ -51,7 +51,7 @@ const FALLBACK_ACCESSORY_PRODUCTS: Product[] = [
     color: 'White',
     available: true,
     storeId: 'ALL',
-    images: ['https://images.unsplash.com/photo-1583863788434-e58a36330cf0?q=80&w=600&auto=format&fit=crop'],
+    images: ['/images/cat-accessories.png'],
     description: 'Official Fast Charging Power Adapter for iPhone',
   },
   {
@@ -66,7 +66,7 @@ const FALLBACK_ACCESSORY_PRODUCTS: Product[] = [
     color: 'Silver',
     available: true,
     storeId: 'ALL',
-    images: ['https://images.unsplash.com/photo-1622445268465-843d61000676?q=80&w=600&auto=format&fit=crop'],
+    images: ['/images/cat-accessories.png'],
     description: '15W Fast Wireless Charging Disk with MagSafe Magnet Alignment',
   },
   {
@@ -81,7 +81,7 @@ const FALLBACK_ACCESSORY_PRODUCTS: Product[] = [
     color: 'Midnight Black',
     available: true,
     storeId: 'ALL',
-    images: ['https://images.unsplash.com/photo-1603313011101-320f26a4f6f6?q=80&w=600&auto=format&fit=crop'],
+    images: ['/images/cat-accessories.png'],
     description: 'Original Apple Soft-touch Silky Finish with MagSafe Support',
   },
   {
@@ -96,7 +96,7 @@ const FALLBACK_ACCESSORY_PRODUCTS: Product[] = [
     color: 'Midnight Aluminum',
     available: true,
     storeId: 'ALL',
-    images: ['https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=600&auto=format&fit=crop'],
+    images: ['/images/cat-accessories.png'],
     description: 'GPS 45mm • S9 Chip • Double Tap Gesture Control',
   },
 ];
@@ -105,7 +105,7 @@ export const AccessoriesSection: React.FC = () => {
   const { products, loading } = useProducts();
   const { activeStoreId } = useStore();
   const { isInWishlist, toggleWishlist } = useWishlist();
-  const { ref, isVisible } = useScrollReveal<HTMLElement>({ threshold: 0.08 });
+  const { ref, isVisible } = useScrollReveal<HTMLElement>({ threshold: 0.01, rootMargin: '300px 0px 300px 0px' });
 
   // Filter dynamic backend products for category === 'accessory'
   const realAccessories = products.filter(
@@ -170,7 +170,7 @@ export const AccessoriesSection: React.FC = () => {
 
   return (
     <section ref={ref} className="py-9 sm:py-12 lg:py-11 bg-white border-b border-zinc-200/60">
-      <div className={`max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 space-y-7 reveal-hidden ${isVisible ? 'reveal-visible' : ''}`}>
+      <div className={`max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 space-y-7 ${isVisible ? 'opacity-100 transition-opacity duration-300' : 'opacity-90'}`}>
         
         {/* Section Header */}
         <div className="flex items-end justify-between gap-4 apple-reveal-item" style={{ transitionDelay: '0ms' }}>

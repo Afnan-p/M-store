@@ -120,7 +120,6 @@ export const Navbar: React.FC<NavbarProps> = () => {
     { name: 'Used', path: '/used-iphones', icon: RotateCcw },
     { name: 'Accessories', path: '/accessories', icon: Headphones },
     { name: 'Offers', path: '/offers', icon: Tag },
-    { name: 'Stores', path: '/stores', icon: Store },
     { name: 'About', path: '/about', icon: Info },
   ];
 
@@ -175,7 +174,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
             })}
           </nav>
 
-          {/* Right Action Buttons: Store Context Selector (Desktop) | Search | Wishlist */}
+          {/* Right Action Buttons: Store Context Selector (Desktop) | Stores Icon (Mobile) | Search | Wishlist */}
           <div className="flex items-center gap-2 sm:gap-3">
             
             {/* Active Store Switcher Pill (Desktop Only) */}
@@ -195,6 +194,20 @@ export const Navbar: React.FC<NavbarProps> = () => {
                 buttonClassName="bg-zinc-100/90 border-zinc-200/90 text-zinc-900 rounded-xl font-bold"
               />
             </div>
+
+            {/* Mobile Stores Direct Link Button (Header) */}
+            <Link
+              to="/stores"
+              className={`lg:hidden p-2 sm:p-2.5 rounded-xl border transition-all duration-200 flex items-center justify-center ${
+                isActive('/stores')
+                  ? 'text-[#E50914] bg-red-50 border-[#E50914]/40 shadow-xs'
+                  : 'text-zinc-700 hover:text-zinc-950 bg-zinc-100 hover:bg-zinc-200/80 border-zinc-200'
+              }`}
+              title="Our Store Locations"
+              aria-label="Stores"
+            >
+              <Store className="w-4 h-4 text-[#E50914]" />
+            </Link>
 
             {/* 1. Search Trigger Button */}
             <button
@@ -323,9 +336,9 @@ export const Navbar: React.FC<NavbarProps> = () => {
         )}
       </header>
 
-      {/* Mobile Floating Curved Pill Navigation Bar */}
-      <div className="lg:hidden fixed bottom-4 left-3 right-3 sm:left-6 sm:right-6 z-50 max-w-[420px] mx-auto pointer-events-auto">
-        <div className="bg-zinc-950/92 backdrop-blur-2xl border border-zinc-800/80 shadow-[0_12px_36px_rgba(0,0,0,0.4)] rounded-full px-2 py-1.5 flex items-center justify-around">
+      {/* Mobile Floating Curved Pill Navigation Bar (6 Clean Tabs) */}
+      <div className="lg:hidden fixed bottom-4 left-2.5 right-2.5 sm:left-6 sm:right-6 z-40 max-w-[420px] mx-auto pointer-events-auto">
+        <div className="bg-zinc-950/95 backdrop-blur-2xl border border-zinc-800/80 shadow-[0_12px_36px_rgba(0,0,0,0.4)] rounded-full px-1.5 py-1.5 flex items-center justify-between">
           {mobileNavTabs.map((tab) => {
             const active = isActive(tab.path);
             const IconComponent = tab.icon;
@@ -333,14 +346,14 @@ export const Navbar: React.FC<NavbarProps> = () => {
               <Link
                 key={tab.path}
                 to={tab.path}
-                className={`relative flex flex-col items-center justify-center py-1.5 px-3 rounded-full transition-all duration-300 ${
+                className={`relative flex flex-col items-center justify-center py-1.5 px-2 sm:px-3 rounded-full transition-all duration-300 ${
                   active
                     ? 'text-white font-bold bg-[#E50914] shadow-md shadow-[#E50914]/40 scale-105'
                     : 'text-zinc-400 hover:text-zinc-200 font-medium'
                 }`}
               >
-                <IconComponent className={`w-4 h-4 sm:w-5 sm:h-5 ${active ? 'stroke-[2.5px]' : 'stroke-[1.8px]'}`} />
-                <span className="text-[9px] sm:text-[10px] tracking-tight mt-0.5 whitespace-nowrap">{tab.name}</span>
+                <IconComponent className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${active ? 'stroke-[2.5px]' : 'stroke-[1.8px]'}`} />
+                <span className="text-[9.5px] sm:text-[10px] tracking-tight mt-0.5 whitespace-nowrap">{tab.name}</span>
               </Link>
             );
           })}

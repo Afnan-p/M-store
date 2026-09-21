@@ -46,10 +46,13 @@ export const OffersPage: React.FC = () => {
   return (
     <div className="pt-32 pb-24 max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 space-y-10">
       {/* Premium Apple Promotional Hero Banner (/offers Page Top Banner) */}
-      <div className="relative rounded-3xl border border-zinc-200/90 p-6 sm:p-10 lg:p-12 overflow-hidden shadow-xs bg-gradient-to-r from-[#FAF9F6] via-rose-50/30 to-white min-h-[340px] sm:min-h-[380px] lg:min-h-[400px] flex items-center">
-        
-        {/* Soft Ambient Radial Glow */}
-        <div className="absolute right-0 top-0 bottom-0 w-1/2 bg-[radial-gradient(circle_at_75%_50%,rgba(229,9,20,0.06)_0%,rgba(255,255,255,0)_70%)] pointer-events-none z-0" />
+      <div className="relative rounded-3xl border border-zinc-200/90 p-6 sm:p-10 lg:p-12 overflow-hidden shadow-xs min-h-[340px] sm:min-h-[380px] lg:min-h-[400px] flex items-center">
+        {/* Full Seamless Background Image */}
+        <img
+          src="/images/special-offer-bg.png"
+          alt="Exclusive Apple Deals & Offers Background"
+          className="absolute inset-0 w-full h-full object-cover object-right sm:object-center pointer-events-none z-0"
+        />
 
         {/* Left Side: Tagline, Main Headline, Subtitle & WhatsApp CTA */}
         <div className="space-y-4 max-w-xl lg:max-w-2xl relative z-10 text-left">
@@ -86,16 +89,6 @@ export const OffersPage: React.FC = () => {
             </a>
           </div>
         </div>
-
-        {/* Right Side: Clean High-Res Isolated Product Render (No Text Overlap or Inner Banner) */}
-        <div className="hidden lg:flex absolute right-4 xl:right-10 top-0 bottom-0 w-[45%] items-center justify-end pointer-events-none z-0">
-          <img
-            src="/images/offers-hero-phones.png"
-            alt="Exclusive Apple Deals & Offers"
-            className="h-[92%] w-auto max-h-[360px] object-contain drop-shadow-[0_15px_30px_rgba(0,0,0,0.12)] rounded-2xl"
-          />
-        </div>
-
       </div>
 
       {/* Store & Category Filter Bar */}

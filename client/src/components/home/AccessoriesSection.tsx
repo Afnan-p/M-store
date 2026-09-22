@@ -216,7 +216,7 @@ export const AccessoriesSection: React.FC = () => {
                     <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
                   </button>
 
-                  <Link to={item.link} className="w-full h-full block">
+                  <Link to={item.link} className="w-full h-full flex items-center justify-center p-2.5 sm:p-3.5">
                     <img
                       src={item.image}
                       alt={item.name}
@@ -224,7 +224,7 @@ export const AccessoriesSection: React.FC = () => {
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = '/images/cat-accessories.png';
                       }}
-                      className="w-full h-full object-cover object-center group-hover:scale-[1.03] transition-transform duration-300 pointer-events-none"
+                      className="max-h-full max-w-full object-contain scale-100 group-hover:scale-[1.03] transition-transform duration-300 pointer-events-none"
                     />
                   </Link>
                 </div>

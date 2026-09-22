@@ -10,6 +10,7 @@ interface ProductGridProps {
   emptySubtitle?: string;
   mobileHorizontalScroll?: boolean;
   animated?: boolean;
+  containerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export const ProductGrid: React.FC<ProductGridProps> = ({
@@ -19,6 +20,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   emptySubtitle = 'Try adjusting your filters or search terms.',
   mobileHorizontalScroll = false,
   animated = false,
+  containerRef,
 }) => {
   if (loading) {
     return (
@@ -52,7 +54,10 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
 
   if (mobileHorizontalScroll) {
     return (
-      <div className="grid grid-rows-2 grid-flow-col auto-cols-[calc(50%-6px)] sm:auto-cols-[calc(33.333%-10px)] gap-2.5 sm:gap-4 overflow-x-auto pb-4 pt-1 snap-x snap-mandatory scrollbar-none [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid-cols-3 lg:grid-cols-4 md:grid-rows-none md:grid-flow-row md:auto-cols-auto md:overflow-visible md:pb-0 md:gap-6 items-stretch w-full">
+      <div
+        ref={containerRef}
+        className="grid grid-rows-2 grid-flow-col auto-cols-[calc(50%-6px)] sm:auto-cols-[calc(33.333%-10px)] gap-2.5 sm:gap-4 overflow-x-auto pb-4 pt-1 snap-x snap-mandatory scroll-smooth scrollbar-none [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid-cols-3 lg:grid-cols-4 md:grid-rows-none md:grid-flow-row md:auto-cols-auto md:overflow-visible md:pb-0 md:gap-6 items-stretch w-full"
+      >
         {products.map((product, idx) => (
           <div
             key={product.id}

@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, ArrowRight } from 'lucide-react';
+import { Heart, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Product } from '../../types/product';
 import { formatCurrency } from '../../utils/formatters';
 import { getWhatsAppProductLink } from '../../utils/whatsapp';
@@ -106,6 +106,14 @@ export const AccessoriesSection: React.FC = () => {
   const { activeStoreId } = useStore();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { ref, isVisible } = useScrollReveal<HTMLElement>({ threshold: 0.01, rootMargin: '300px 0px 300px 0px' });
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = direction === 'left' ? -260 : 260;
+      scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
 
   // Filter dynamic backend products for category === 'accessory'
   const realAccessories = products.filter(
@@ -173,7 +181,7 @@ export const AccessoriesSection: React.FC = () => {
       <div className={`max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 space-y-7 reveal-hidden ${isVisible ? 'reveal-visible' : ''}`}>
         
         {/* Section Header */}
-        <div className="flex items-end justify-between gap-4 apple-reveal-item" style={{ transitionDelay: '0ms' }}>
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 sm:gap-6 apple-reveal-item" style={{ transitionDelay: '0ms' }}>
           <div className="space-y-1">
             <span className="text-[11px] font-semibold text-[#E50914] uppercase tracking-[0.2em] block">
               APPLE ESSENTIALS
@@ -186,23 +194,46 @@ export const AccessoriesSection: React.FC = () => {
             </p>
           </div>
 
-          <Link
-            to="/accessories"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-zinc-900 hover:text-[#E50914] bg-white border border-zinc-200/90 hover:bg-zinc-100 transition-colors shrink-0 shadow-xs"
-          >
-            <span>View Collection</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+          <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto shrink-0 pt-1 sm:pt-0">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => handleScroll('left')}
+                className="w-8 h-8 rounded-lg bg-white border border-zinc-200/90 hover:border-zinc-400 text-zinc-700 hover:text-zinc-950 flex items-center justify-center transition-all shadow-xs active:scale-95 cursor-pointer"
+                aria-label="Scroll left"
+                title="Previous accessories"
+              >
+                <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleScroll('right')}
+                className="w-8 h-8 rounded-lg bg-white border border-zinc-200/90 hover:border-zinc-400 text-zinc-700 hover:text-zinc-950 flex items-center justify-center transition-all shadow-xs active:scale-95 cursor-pointer"
+                aria-label="Scroll right"
+                title="Next accessories"
+              >
+                <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+              </button>
+            </div>
+
+            <Link
+              to="/accessories"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-zinc-900 hover:text-[#E50914] bg-white border border-zinc-200/90 hover:bg-zinc-100 transition-colors shrink-0 shadow-xs"
+            >
+              <span>View Collection</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         </div>
 
         {/* 2-Card Mobile Carousel / 5-Column Desktop Grid */}
-        <div className="flex md:grid md:grid-cols-5 gap-3 sm:gap-4 md:gap-5 overflow-x-auto scrollbar-none [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory pb-2 pt-1">
+        <div ref={scrollContainerRef} className="flex lg:grid lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 overflow-x-auto scrollbar-none [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory scroll-smooth pb-2 pt-1">
           {displayAccessories.map((item, idx) => {
             const isLiked = isInWishlist(item.id);
             return (
               <div
                 key={item.id}
-                className="group relative bg-white border border-zinc-200/90 hover:border-zinc-300 rounded-2xl overflow-hidden flex flex-col justify-between h-full transition-all duration-300 shadow-xs hover:shadow-md hover:-translate-y-0.5 shrink-0 w-[calc((100%-12px)/2)] sm:w-[240px] snap-start md:w-auto apple-reveal-card"
+                className="group relative bg-white border border-zinc-200/90 hover:border-zinc-300 rounded-2xl overflow-hidden flex flex-col justify-between h-full transition-all duration-300 shadow-xs hover:shadow-md hover:-translate-y-0.5 shrink-0 w-[calc((100%-12px)/2)] sm:w-[220px] md:w-[240px] snap-start lg:w-auto apple-reveal-card"
                 style={{ transitionDelay: `${100 + idx * 80}ms` }}
               >
                 {/* Product Image Area - Edge to Edge Fixed Aspect Ratio */}

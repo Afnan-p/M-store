@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import type { Product } from '../../types/product';
 import { ProductGrid } from '../product/ProductGrid';
 import { useStore } from '../../context/StoreContext';
-import { ArrowRight, MapPin } from 'lucide-react';
+import { ArrowRight, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 
 interface FeaturedProductsProps {
@@ -15,6 +15,14 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, lo
   const { ref, isVisible } = useScrollReveal<HTMLElement>({ threshold: 0.08 });
   const { activeStoreId, activeStore } = useStore();
   const [activeTab, setActiveTab] = React.useState<'all' | 'new' | 'used' | 'accessory'>('all');
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = direction === 'left' ? -260 : 260;
+      scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
 
   const storeFilteredProducts = products.filter((p) => {
     if (
@@ -85,7 +93,7 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, lo
             </p>
           </div>
 
-          {/* Right Filters & View All */}
+          {/* Right Filters, Scroll Controls & View All */}
           <div className="flex flex-wrap items-center justify-between sm:justify-end gap-3 w-full lg:w-auto">
             
             {/* Filter Tabs Container */}
@@ -109,7 +117,29 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, lo
               ))}
             </div>
 
-            {/* View All Link - Modern rounded-lg border radius */}
+            {/* Scroll Control Arrows (< >) */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => handleScroll('left')}
+                className="w-8 h-8 rounded-lg bg-white border border-zinc-200/90 hover:border-zinc-400 text-zinc-700 hover:text-zinc-950 flex items-center justify-center transition-all shadow-xs active:scale-95 cursor-pointer"
+                aria-label="Scroll left"
+                title="Previous products"
+              >
+                <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleScroll('right')}
+                className="w-8 h-8 rounded-lg bg-white border border-zinc-200/90 hover:border-zinc-400 text-zinc-700 hover:text-zinc-950 flex items-center justify-center transition-all shadow-xs active:scale-95 cursor-pointer"
+                aria-label="Scroll right"
+                title="Next products"
+              >
+                <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+              </button>
+            </div>
+
+            {/* View All Link */}
             <Link
               to="/iphones"
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold text-zinc-900 hover:text-[#E50914] bg-white border border-zinc-200/90 hover:bg-zinc-100 transition-colors shrink-0 shadow-xs"
@@ -120,7 +150,7 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, lo
           </div>
         </div>
 
-        {/* Grid with 2-row horizontal scroll on mobile */}
+        {/* Grid with 2-row horizontal scroll on mobile & scroll container ref */}
         <ProductGrid
           products={filtered}
           loading={loading}
@@ -128,6 +158,7 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, lo
           emptySubtitle={activeStore ? 'This store branch has no products in this sub-category. Try selecting "All Stores" in the header.' : 'Try adjusting your filter selection.'}
           mobileHorizontalScroll={true}
           animated={true}
+          containerRef={scrollContainerRef}
         />
       </div>
     </section>

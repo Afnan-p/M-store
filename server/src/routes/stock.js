@@ -51,7 +51,7 @@ router.get('/', async (req, res) => {
 
       let allStockRecords = await ProductStock.find({}).lean();
 
-      // Auto-ensure stock entries exist in MongoDB in a single bulk operation
+      // Ensure a single global stock entry exists per product
       const missingDocs = [];
       const allProductItems = [
         ...products.map((p) => ({ id: p.id, itemType: 'product' })),
@@ -59,33 +59,15 @@ router.get('/', async (req, res) => {
       ];
 
       for (const pItem of allProductItems) {
-        const prodObj = prodMap.get(String(pItem.id));
-        const pStoreIds = Array.isArray(prodObj?.storeIds) && prodObj.storeIds.length > 0
-          ? prodObj.storeIds
-          : (prodObj?.storeId ? [prodObj.storeId] : ['ALL']);
-        const isAllStores = pStoreIds.some((id) => id === 'ALL' || id === 'all');
-        const pStoreLower = String(prodObj?.storeId || '').toLowerCase();
-
-        for (const sId of STORES) {
-          const isMatch = isAllStores || pStoreIds.includes(sId) || (
-            (sId === 'store001' && pStoreLower.includes('kootanad')) ||
-            (sId === 'store002' && pStoreLower.includes('kecheri')) ||
-            (sId === 'store003' && pStoreLower.includes('mattom')) ||
-            (sId === 'store004' && pStoreLower.includes('pattambi'))
-          );
-
-          if (!isMatch) continue;
-
-          const exists = allStockRecords.some((s) => String(s.productId) === String(pItem.id) && s.storeId === sId);
-          if (!exists) {
-            missingDocs.push({
-              id: `stock_${pItem.id}_${sId}`,
-              productId: String(pItem.id),
-              storeId: sId,
-              stock: 10,
-              itemType: pItem.itemType,
-            });
-          }
+        const exists = allStockRecords.some((s) => String(s.productId) === String(pItem.id));
+        if (!exists) {
+          missingDocs.push({
+            id: `stock_${pItem.id}_global`,
+            productId: String(pItem.id),
+            storeId: 'global',
+            stock: 10,
+            itemType: pItem.itemType,
+          });
         }
       }
 
@@ -98,32 +80,15 @@ router.get('/', async (req, res) => {
         }
       }
 
-      // Filter out dummy unassigned stock entries for products assigned to specific stores
-      const cleanedStockRecords = allStockRecords.filter((s) => {
-        const p = prodMap.get(String(s.productId));
-        if (p) {
-          const pStoreIds = Array.isArray(p.storeIds) && p.storeIds.length > 0
-            ? p.storeIds
-            : (p.storeId ? [p.storeId] : ['ALL']);
-          const isAllStores = pStoreIds.some((id) => id === 'ALL' || id === 'all');
-          if (!isAllStores) {
-            const pStoreLower = String(p.storeId || '').toLowerCase();
-            const isMatch = pStoreIds.includes(s.storeId) || (
-              (s.storeId === 'store001' && pStoreLower.includes('kootanad')) ||
-              (s.storeId === 'store002' && pStoreLower.includes('kecheri')) ||
-              (s.storeId === 'store003' && pStoreLower.includes('mattom')) ||
-              (s.storeId === 'store004' && pStoreLower.includes('pattambi'))
-            );
-            if (!isMatch) return false;
-          }
+      // Deduplicate: pick 1 stock record per product ID
+      const uniqueStockByProduct = new Map();
+      for (const s of allStockRecords) {
+        const pid = String(s.productId);
+        if (!uniqueStockByProduct.has(pid)) {
+          uniqueStockByProduct.set(pid, s);
         }
-        return true;
-      });
-
-      let stockRecords = cleanedStockRecords;
-      if (storeId && storeId !== 'ALL' && storeId !== 'all') {
-        stockRecords = cleanedStockRecords.filter((s) => s.storeId === storeId);
       }
+      const stockRecords = Array.from(uniqueStockByProduct.values());
 
       const enriched = stockRecords.map((s) => {
         const p = prodMap.get(String(s.productId)) || (s.productName ? prodMap.get(s.productName.toLowerCase().trim()) : null);
@@ -242,10 +207,11 @@ router.get('/:productId/:storeId', async (req, res) => {
 
 // PATCH /api/stock - Update stock & record audit history (Admin Only)
 router.patch('/', protect, adminOnly, async (req, res) => {
-  const { productId, storeId, newStock, reason, notes, updatedBy } = req.body;
+  const { productId, newStock, reason, notes, updatedBy } = req.body;
+  const storeId = req.body.storeId || 'global';
 
-  if (!productId || !storeId) {
-    return res.status(400).json({ message: 'productId and storeId are required' });
+  if (!productId) {
+    return res.status(400).json({ message: 'productId is required' });
   }
 
   const stockNum = Number(newStock);
@@ -257,7 +223,7 @@ router.patch('/', protect, adminOnly, async (req, res) => {
   const chosenReason = validReasons.includes(reason) ? reason : 'Stock Correction';
 
   // In-Memory Stock Update
-  let memIndex = inMemoryStocks.findIndex((s) => s.productId === productId && s.storeId === storeId);
+  let memIndex = inMemoryStocks.findIndex((s) => s.productId === productId);
   const previousStock = memIndex !== -1 ? inMemoryStocks[memIndex].stock : 0;
   const changeAmount = stockNum - previousStock;
 
@@ -292,13 +258,20 @@ router.patch('/', protect, adminOnly, async (req, res) => {
 
   try {
     if (isDbConnected()) {
+      // Update ProductStock
       const updatedRecord = await ProductStock.findOneAndUpdate(
-        { productId, storeId },
+        { productId },
         {
-          $set: { stock: stockNum },
+          $set: { stock: stockNum, storeId },
           $setOnInsert: { id: `stock_${productId}_${storeId}` },
         },
         { new: true, upsert: true }
+      );
+
+      // Sync Product stock field as well
+      await Product.findOneAndUpdate(
+        { $or: [{ id: productId }, { _id: mongoose.isValidObjectId(productId) ? productId : null }] },
+        { $set: { stock: stockNum } }
       );
 
       const dbHistory = await StockHistory.create({

@@ -18,7 +18,6 @@ const productSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      enum: ['iphone-new', 'iphone-used', 'accessory'],
     },
     subCategory: {
       type: String,
@@ -48,16 +47,10 @@ const productSchema = new mongoose.Schema(
       type: Number,
       default: null,
     },
-    storeId: {
-      type: String,
-      required: true,
-      default: 'store001',
+    stock: {
+      type: Number,
+      default: 1,
     },
-    storeIds: [
-      {
-        type: String,
-      },
-    ],
     images: [
       {
         type: String,
@@ -105,7 +98,7 @@ const productSchema = new mongoose.Schema(
   }
 );
 
-productSchema.index({ storeId: 1, category: 1 });
+productSchema.index({ category: 1 });
 productSchema.index({ isOffer: 1 });
 productSchema.index({ available: 1 });
 productSchema.index({ slug: 1 });

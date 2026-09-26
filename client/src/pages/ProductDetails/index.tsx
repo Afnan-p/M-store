@@ -6,12 +6,14 @@ import { ProductGallery } from '../../components/product/ProductGallery';
 import { ProductGrid } from '../../components/product/ProductGrid';
 import { formatCurrency } from '../../utils/formatters';
 import { getWhatsAppProductLink } from '../../utils/whatsapp';
-import { updateProductSEO } from '../../utils/seo';
+import { updateProductSEO, generateProductSchema, generateBreadcrumbSchema } from '../../utils/seo';
+import { SEO } from '../../components/common/SEO';
 import { BRAND_CONFIG } from '../../services/config';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { useWishlist } from '../../context/WishlistContext';
 import { useStore } from '../../context/StoreContext';
+import { useSettings } from '../../context/SettingsContext';
 import { StockService } from '../../services/stock';
 import { OfferProductService } from '../../services/offerProducts';
 import {
@@ -33,7 +35,8 @@ export const ProductDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isInWishlist, toggleWishlist } = useWishlist();
-  const { stores, activeStoreId } = useStore();
+  const { stores, activeStoreId, isMultiStoreEnabled } = useStore();
+  const { settings } = useSettings();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
@@ -137,7 +140,7 @@ export const ProductDetailsPage: React.FC = () => {
         window.removeEventListener('mstore_products_updated', handleUpdate);
       }
     };
-  }, [product?.id, targetStoreId, stores]);
+  }, [product?.id, product?.storeIds, product?.storeId, targetStoreId, stores]);
 
   if (loading) {
     return (
@@ -163,14 +166,55 @@ export const ProductDetailsPage: React.FC = () => {
     );
   }
 
-  const isUsed = product.category === 'iphone-used';
-  const isNew = product.category === 'iphone-new';
+  const isUsed = product.category === 'iphone-used' || (product.condition && product.condition !== 'Brand New');
+  const isNew = product.category === 'iphone-new' || product.condition === 'Brand New';
   const savings = product.originalPrice && product.originalPrice > product.price
     ? product.originalPrice - product.price
     : 0;
 
+  const storageStr = product.storage && product.storage !== 'N/A' && product.storage !== 'None' ? product.storage : '';
+  const colorStr = product.color && product.color !== 'N/A' && product.color !== 'None' ? product.color : '';
+  const conditionStr = product.condition || (isUsed ? 'Pre-Owned' : 'New');
+
+  const dynamicProductTitle = `${product.name} ${storageStr} ${colorStr}`.replace(/\s+/g, ' ').trim() + ` | Price & Availability | M Store Kerala`;
+  const dynamicProductDescription = `Buy ${product.name} ${storageStr} ${colorStr} (${conditionStr}) at M Store Kerala. Check current price, condition, availability and product details online.`;
+
+  const categoryPath = product.category === 'accessory'
+    ? '/accessories'
+    : isUsed
+    ? '/used-iphones'
+    : '/iphones';
+
+  const categoryLabel = product.category === 'accessory'
+    ? 'Accessories'
+    : isUsed
+    ? 'Used iPhones'
+    : 'iPhones';
+
+  const isStockAvailable = stockNum > 0 && product.inStock !== false;
+
+  const productBreadcrumbs = generateBreadcrumbSchema([
+    { name: 'Home', url: '/' },
+    { name: categoryLabel, url: categoryPath },
+    { name: product.name, url: `/product/${product.id}` },
+  ]);
+
+  const productSchema = generateProductSchema(product, isStockAvailable);
+  const productJsonLd = [productSchema, productBreadcrumbs].filter(Boolean);
+
+  const primaryImage = Array.isArray(product.images) && product.images.length > 0
+    ? product.images[0]
+    : (product.image || '/images/placeholder-iphone.svg');
+
   return (
     <div className="pt-24 sm:pt-28 lg:pt-32 pb-16 sm:pb-24 max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 space-y-12 sm:space-y-16">
+      <SEO
+        title={dynamicProductTitle}
+        description={dynamicProductDescription}
+        type="product"
+        image={primaryImage}
+        jsonLd={productJsonLd}
+      />
       {/* Back button */}
       <div>
         <button
@@ -197,29 +241,19 @@ export const ProductDetailsPage: React.FC = () => {
             {isUsed && <Badge variant="used">Certified Pre-Owned</Badge>}
             {product.category === 'accessory' && <Badge variant="accessory">Accessory</Badge>}
             
-            {targetStoreId === 'ALL' ? (
-              stockNum === 0 ? (
-                <span className="px-3 py-0.5 rounded-full text-[11px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200">
-                  Out of Stock (All Branches)
-                </span>
-              ) : (
-                <span className="px-3 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>In Stock ({stockNum} Available Across Branches)</span>
-                </span>
-              )
-            ) : stockNum === 0 ? (
+            {stockNum === 0 ? (
               <span className="px-3 py-0.5 rounded-full text-[11px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200">
-                Out of Stock at Selected Branch
+                Out of Stock
               </span>
-            ) : stockNum >= 1 && stockNum <= 5 ? (
+            ) : stockNum <= 3 ? (
               <span className="px-3 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
                 <Flame className="w-3.5 h-3.5 text-amber-600 fill-amber-600" />
-                <span>Only {stockNum} Left at Branch</span>
+                <span>Only {stockNum} Left in Stock</span>
               </span>
             ) : (
-              <span className="px-3 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                In Stock ({stockNum} Units)
+              <span className="px-3 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>In Stock ({stockNum} Units Available)</span>
               </span>
             )}
           </div>
@@ -250,27 +284,40 @@ export const ProductDetailsPage: React.FC = () => {
           </div>
 
           {/* Pricing Box */}
-          <div className="p-4 sm:p-5 bg-white border border-zinc-200/90 rounded-2xl space-y-1.5 shadow-xs">
-            <div className="flex items-baseline justify-between flex-wrap gap-2">
-              <div className="flex items-baseline gap-2">
-                <span className="font-display text-2xl sm:text-[28px] font-extrabold text-zinc-950 tracking-tight">
-                  {formatCurrency(product.price)}
-                </span>
-                {product.originalPrice && product.originalPrice > product.price && (
-                  <span className="text-xs sm:text-sm text-zinc-400 line-through font-normal">
-                    {formatCurrency(product.originalPrice)}
-                  </span>
-                )}
-              </div>
+          {(() => {
+            const effectiveOriginal = (product.originalPrice && product.originalPrice > product.price)
+              ? product.originalPrice
+              : Math.round(product.price * 1.15);
+            
+            const detailSavings = effectiveOriginal > product.price ? effectiveOriginal - product.price : 0;
+            const discountPct = effectiveOriginal > product.price
+              ? Math.round((detailSavings / effectiveOriginal) * 100)
+              : 0;
 
-              {savings > 0 && (
-                <span className="text-xs font-semibold text-emerald-600 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                  Save {formatCurrency(savings)}
-                </span>
-              )}
-            </div>
-            <div className="text-[11px] text-zinc-500 font-normal">Includes quality guarantee & store testing warranty</div>
-          </div>
+            return (
+              <div className="p-4 sm:p-5 bg-white border border-zinc-200/90 rounded-2xl space-y-1.5 shadow-xs">
+                <div className="flex items-baseline justify-between flex-wrap gap-2">
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-display text-2xl sm:text-[28px] font-extrabold text-zinc-950 tracking-tight">
+                      {formatCurrency(product.price)}
+                    </span>
+                    {effectiveOriginal > product.price && (
+                      <span className="text-xs sm:text-sm text-zinc-400 line-through font-normal">
+                        {formatCurrency(effectiveOriginal)}
+                      </span>
+                    )}
+                  </div>
+
+                  {detailSavings > 0 && (
+                    <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                      Save {formatCurrency(detailSavings)} ({discountPct}% OFF)
+                    </span>
+                  )}
+                </div>
+                <div className="text-[11px] text-zinc-500 font-normal">Includes quality guarantee & store testing warranty</div>
+              </div>
+            );
+          })()}
 
           {/* SPECIAL FREE OFFER BANNER */}
           {product.offer?.enabled && (product.offer?.status || 'active') === 'active' && offerItemsWithDetails.length > 0 && (
@@ -367,50 +414,37 @@ export const ProductDetailsPage: React.FC = () => {
 
           {/* Prominent CTAs & Stock Notice */}
           {(() => {
-            const isOutOfStock = stockNum === 0;
-            const isAllStores = targetStoreId === 'ALL';
-            const selectedStore = stores.find((s) => s.id === targetStoreId);
-            const selectedStoreName = selectedStore ? selectedStore.name : 'Selected Branch';
-
-            const inStockBranches = branchBreakdown.filter((b) => b.stock > 0);
-            const outOfStockBranches = branchBreakdown.filter((b) => b.stock === 0);
+            const isOutOfStock = stockNum === 0 || product.available === false;
 
             return (
               <div className="space-y-2.5 pt-1">
                 {isOutOfStock ? (
                   <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-extrabold flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                    <span>
-                      {isAllStores
-                        ? 'Out of Stock across all showroom branches in Kerala.'
-                        : `Out of Stock at ${selectedStoreName}.${inStockBranches.length > 0 ? ` However, stock is available in ${inStockBranches.length} other showroom branch(es)!` : ''}`}
-                    </span>
+                    <span>Out of Stock. Contact us on WhatsApp for arrival updates.</span>
                   </div>
-                ) : isAllStores ? (
-                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-medium flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>
-                      In Stock! {stockNum} total units available across {inStockBranches.length} showroom branch{inStockBranches.length > 1 ? 'es' : ''}
-                      {outOfStockBranches.length > 0 ? ` (${outOfStockBranches.map((b) => b.storeName.includes('-') ? b.storeName.split('-')[1].trim() : b.storeName).join(', ')} currently out of stock)` : ''}.
-                    </span>
-                  </div>
-                ) : stockNum >= 1 && stockNum <= 5 ? (
+                ) : stockNum <= 3 ? (
                   <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 font-extrabold flex items-center gap-2">
                     <PackageCheck className="w-4 h-4 text-amber-600 shrink-0" />
-                    <span>Low Stock: Only {stockNum} units left in stock at {selectedStoreName}!</span>
+                    <span>⚡ Low Stock: Only {stockNum} units left in stock!</span>
                   </div>
-                ) : null}
+                ) : (
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-medium flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>In Stock! Ready for instant pickup or fast delivery across Kerala.</span>
+                  </div>
+                )}
 
                 {isOutOfStock ? (
                   <button
                     disabled
                     className="w-full h-11 sm:h-12 bg-zinc-200 text-zinc-400 font-bold rounded-xl text-sm cursor-not-allowed border border-zinc-300 flex items-center justify-center gap-2"
                   >
-                    <span>Out of Stock at {isAllStores ? 'All Branches' : selectedStoreName}</span>
+                    <span>Out of Stock</span>
                   </button>
                 ) : (
                   <a
-                    href={getWhatsAppProductLink(product)}
+                    href={getWhatsAppProductLink(product, undefined, settings.whatsappNumber)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full inline-block"
@@ -421,17 +455,17 @@ export const ProductDetailsPage: React.FC = () => {
                   </a>
                 )}
 
-                <a href={`tel:${BRAND_CONFIG.phone.replace(/\s+/g, '')}`} className="w-full inline-block">
+                <a href={`tel:${(settings.phone || '').replace(/\s+/g, '')}`} className="w-full inline-block">
                   <Button size="lg" fullWidth variant="secondary" className="h-11 sm:h-12 text-sm font-semibold rounded-xl bg-zinc-950 hover:bg-black text-white border border-zinc-800" icon={<Phone className="w-4 h-4 text-white" />}>
-                    Call Store ({BRAND_CONFIG.phone})
+                    Call Store ({settings.phone})
                   </Button>
                 </a>
               </div>
             );
           })()}
 
-          {/* Showroom Branch Availability Card */}
-          <div className="p-4 bg-zinc-50 border border-zinc-200/90 rounded-2xl space-y-3">
+          {/* Showroom Branch Availability Card (Rendered when Multi-Store Mode is enabled) */}
+          <div className={`${isMultiStoreEnabled ? 'block' : 'hidden'} p-4 bg-zinc-50 border border-zinc-200/90 rounded-2xl space-y-3`}>
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1.5 font-extrabold text-xs text-zinc-900 uppercase tracking-wider">
                 <MapPin className="w-4 h-4 text-[#E50914]" />

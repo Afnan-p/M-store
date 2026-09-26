@@ -6,6 +6,7 @@ import { FloatingWhatsApp } from './components/layout/FloatingWhatsApp';
 import { WishlistModal } from './components/common/WishlistModal';
 import { WishlistProvider } from './context/WishlistContext';
 import { StoreProvider } from './context/StoreContext';
+import { SettingsProvider } from './context/SettingsContext';
 
 // Eagerly Loaded Public Pages for Instant First Paint
 import { HomePage } from './pages/Home';
@@ -17,6 +18,8 @@ import { ProductDetailsPage } from './pages/ProductDetails';
 import { AboutPage } from './pages/About';
 import { ContactPage } from './pages/Contact';
 import { StoresPage } from './pages/Stores';
+import { NotFoundPage } from './pages/NotFound';
+import { SEO } from './components/common/SEO';
 
 // Lazy Loaded Admin Management Portal Routes
 const AdminLogin = lazy(() => import('./pages/Admin/AdminLogin').then((m) => ({ default: m.AdminLogin })));
@@ -25,8 +28,10 @@ const AdminProducts = lazy(() => import('./pages/Admin/AdminProducts').then((m) 
 const AdminStockPage = lazy(() => import('./pages/Admin/AdminStock').then((m) => ({ default: m.AdminStockPage })));
 const AdminOffers = lazy(() => import('./pages/Admin/AdminOffers').then((m) => ({ default: m.AdminOffers })));
 const AdminOfferProducts = lazy(() => import('./pages/Admin/AdminOfferProducts').then((m) => ({ default: m.AdminOfferProducts })));
+const AdminCategories = lazy(() => import('./pages/Admin/AdminCategories').then((m) => ({ default: m.AdminCategories })));
 const AdminSegments = lazy(() => import('./pages/Admin/AdminSegments').then((m) => ({ default: m.AdminSegments })));
 const AdminStores = lazy(() => import('./pages/Admin/AdminStores').then((m) => ({ default: m.AdminStores })));
+const AdminSettings = lazy(() => import('./pages/Admin/AdminSettings').then((m) => ({ default: m.AdminSettings })));
 const AdminNewProduct = lazy(() => import('./pages/Admin/AdminNewProduct').then((m) => ({ default: m.AdminNewProduct })));
 const AdminEditProduct = lazy(() => import('./pages/Admin/AdminEditProduct').then((m) => ({ default: m.AdminEditProduct })));
 
@@ -55,7 +60,12 @@ const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   const isAdminRoute = location.pathname.startsWith('/mstore-management-portal');
 
   if (isAdminRoute) {
-    return <>{children}</>;
+    return (
+      <>
+        <SEO noindex={true} nofollow={true} title="M Store Portal" />
+        {children}
+      </>
+    );
   }
 
   return (
@@ -70,8 +80,9 @@ const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
 export function App() {
   return (
-    <StoreProvider>
-      <WishlistProvider>
+    <SettingsProvider>
+      <StoreProvider>
+        <WishlistProvider>
         <Router>
           <ScrollToTop />
           <PublicLayout>
@@ -85,6 +96,9 @@ export function App() {
                 <Route path="/used-iphones/:segmentSlug" element={<UsedIphonesPage />} />
                 <Route path="/accessories" element={<AccessoriesPage />} />
                 <Route path="/offers" element={<OffersPage />} />
+                <Route path="/products" element={<ProductsPage />} />
+                <Route path="/products/:segmentSlug" element={<ProductsPage />} />
+                <Route path="/category/:categorySlug" element={<ProductsPage />} />
                 <Route path="/product/:id" element={<ProductDetailsPage />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/contact" element={<ContactPage />} />
@@ -101,13 +115,15 @@ export function App() {
                 <Route path="/mstore-management-portal/stock" element={<AdminStockPage />} />
                 <Route path="/mstore-management-portal/offer-products" element={<AdminOfferProducts />} />
                 <Route path="/mstore-management-portal/offers" element={<AdminOffers />} />
+                <Route path="/mstore-management-portal/categories" element={<AdminCategories />} />
                 <Route path="/mstore-management-portal/segments" element={<AdminSegments />} />
                 <Route path="/mstore-management-portal/stores" element={<AdminStores />} />
+                <Route path="/mstore-management-portal/settings" element={<AdminSettings />} />
                 <Route path="/mstore-management-portal/products/new" element={<AdminNewProduct />} />
                 <Route path="/mstore-management-portal/products/:id/edit" element={<AdminEditProduct />} />
 
                 {/* Catch-all Fallback Route */}
-                <Route path="*" element={<HomePage />} />
+                <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </Suspense>
 
@@ -117,6 +133,7 @@ export function App() {
         </Router>
       </WishlistProvider>
     </StoreProvider>
+  </SettingsProvider>
   );
 }
 

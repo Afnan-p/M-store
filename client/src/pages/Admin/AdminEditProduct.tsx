@@ -46,7 +46,7 @@ export const AdminEditProduct: React.FC = () => {
         });
       }
     }
-    navigate('/admin/products');
+    navigate('/mstore-management-portal/products');
   };
 
   if (loading) {

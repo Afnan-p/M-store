@@ -39,17 +39,17 @@ export const AdminNewProduct: React.FC = () => {
 
   return (
     <AdminLayout
-      title={isAccessory ? 'Add New Accessory' : 'Add New iPhone Device'}
+      title={isAccessory ? 'Add New Accessory' : 'Add New Phone / Device'}
       subtitle={
         isAccessory
           ? 'Publish a new charger, speaker, AirPods, case, or custom accessory to a showroom store branch.'
-          : 'Publish a new sealed iPhone or pre-owned certified device to a showroom store branch.'
+          : 'Publish a new or pre-owned phone, device, or mobile listing to a showroom store branch.'
       }
     >
       <ProductForm
         onSubmit={handleSubmit}
         defaultCategory={isAccessory ? 'accessory' : 'iphone-used'}
-        buttonText={isAccessory ? 'Publish Accessory' : 'Publish iPhone Device'}
+        buttonText={isAccessory ? 'Publish Accessory' : 'Publish Device Listing'}
       />
     </AdminLayout>
   );

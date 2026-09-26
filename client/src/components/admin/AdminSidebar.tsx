@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, Layers, Store, LogOut, ExternalLink, Smartphone, Headphones, Gift, Sparkles, X } from 'lucide-react';
+import { LayoutDashboard, Package, Layers, Store, LogOut, ExternalLink, Smartphone, Headphones, Gift, Sparkles, FolderTree, X, Settings } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { useStore } from '../../context/StoreContext';
 
 interface AdminSidebarProps {
   isOpen?: boolean;
@@ -12,6 +13,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen = false, onCl
   const location = useLocation();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
+  const { isMultiStoreEnabled, setIsMultiStoreEnabled } = useStore();
 
   const handleLogout = async () => {
     await logout();
@@ -24,9 +26,11 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen = false, onCl
     { label: 'Products Stock', path: '/mstore-management-portal/stock', icon: <Layers className="w-4 h-4" /> },
     { label: 'Offer Products', path: '/mstore-management-portal/offer-products', icon: <Gift className="w-4 h-4" /> },
     { label: 'Offers', path: '/mstore-management-portal/offers', icon: <Sparkles className="w-4 h-4" /> },
-    { label: 'Showroom Stores', path: '/mstore-management-portal/stores', icon: <Store className="w-4 h-4" /> },
+    { label: 'Shop Categories', path: '/mstore-management-portal/categories', icon: <FolderTree className="w-4 h-4" /> },
     { label: 'iPhone Segments', path: '/mstore-management-portal/segments', icon: <Layers className="w-4 h-4" /> },
-    { label: 'Add New iPhone', path: '/mstore-management-portal/products/new?type=iphone', icon: <Smartphone className="w-4 h-4" /> },
+    { label: 'Showroom Stores', path: '/mstore-management-portal/stores', icon: <Store className="w-4 h-4" /> },
+    { label: 'Store Settings', path: '/mstore-management-portal/settings', icon: <Settings className="w-4 h-4" /> },
+    { label: 'Add New Device', path: '/mstore-management-portal/products/new?type=device', icon: <Smartphone className="w-4 h-4" /> },
     { label: 'Add Accessory', path: '/mstore-management-portal/products/new?type=accessory', icon: <Headphones className="w-4 h-4" /> },
   ];
 
@@ -104,10 +108,10 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen = false, onCl
       </div>
 
       {/* Logout button */}
-      <div className="pt-4 border-t border-zinc-200 mt-auto">
+      <div className="pt-3 border-t border-zinc-200 mt-auto">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold text-rose-600 hover:bg-rose-500/10 rounded-xl transition-colors"
+          className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-500/10 rounded-xl transition-colors"
         >
           <LogOut className="w-4 h-4" />
           <span>Sign Out</span>

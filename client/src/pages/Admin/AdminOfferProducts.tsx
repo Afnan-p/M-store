@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AdminLayout } from '../../components/admin/AdminLayout';
 import { OfferProductService } from '../../services/offerProducts';
-import { useStore } from '../../context/StoreContext';
 import type { OfferProduct } from '../../types/offerProduct';
 import { Button } from '../../components/common/Button';
 import { Toast } from '../../components/common/Toast';
@@ -11,7 +10,6 @@ import {
   Edit,
   Trash2,
   Search,
-  Store as StoreIcon,
   Gift,
   CheckCircle2,
   X,
@@ -20,12 +18,11 @@ import {
 } from 'lucide-react';
 
 export const AdminOfferProducts: React.FC = () => {
-  const { stores } = useStore();
   const [offerProducts, setOfferProducts] = useState<OfferProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [selectedStoreFilter, setSelectedStoreFilter] = useState('ALL');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState('ALL');
+  const [selectedStoreFilter, setSelectedStoreFilter] = useState('ALL');
   const [toastMsg, setToastMsg] = useState('');
 
   // Modal State
@@ -195,23 +192,6 @@ export const AdminOfferProducts: React.FC = () => {
               />
             </div>
 
-            {/* Store Filter */}
-            <div className="flex items-center gap-1.5 bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-xs">
-              <StoreIcon className="w-3.5 h-3.5 text-[#E50914]" />
-              <select
-                value={selectedStoreFilter}
-                onChange={(e) => setSelectedStoreFilter(e.target.value)}
-                className="bg-transparent font-bold text-zinc-900 text-xs focus:outline-none cursor-pointer"
-              >
-                <option value="ALL">All Showrooms</option>
-                {stores.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
             {/* Status Filter */}
             <div className="flex items-center gap-1.5 bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
@@ -249,7 +229,6 @@ export const AdminOfferProducts: React.FC = () => {
               <thead className="bg-zinc-50 text-zinc-600 uppercase tracking-wider font-semibold border-b border-zinc-200">
                 <tr>
                   <th className="p-3 sm:p-4">Offer Product Details</th>
-                  <th className="p-3 sm:p-4">Showroom / Store</th>
                   <th className="p-3 sm:p-4">Promotional Stock</th>
                   <th className="p-3 sm:p-4">Status</th>
                   <th className="p-3 sm:p-4 text-right">Actions</th>
@@ -258,19 +237,18 @@ export const AdminOfferProducts: React.FC = () => {
               <tbody className="divide-y divide-zinc-200 text-zinc-700">
                 {loading ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-zinc-500">
+                    <td colSpan={4} className="p-8 text-center text-zinc-500">
                       Loading offer products...
                     </td>
                   </tr>
                 ) : filteredItems.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-zinc-500 italic">
+                    <td colSpan={4} className="p-8 text-center text-zinc-500 italic">
                       No offer products added yet. Click "+ Add Offer Product" to create reusable free promotional items!
                     </td>
                   </tr>
                 ) : (
                   filteredItems.map((item) => {
-                    const assignedStore = stores.find((s) => s.id === item.storeId);
                     return (
                       <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
                         {/* Name & Thumbnail */}
@@ -290,14 +268,6 @@ export const AdminOfferProducts: React.FC = () => {
                               </div>
                             </div>
                           </div>
-                        </td>
-
-                        {/* Store */}
-                        <td className="p-3 sm:p-4">
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-zinc-100 text-zinc-800 border border-zinc-200 whitespace-nowrap">
-                            <StoreIcon className="w-3 h-3 text-[#E50914]" />
-                            {item.storeId === 'ALL' ? 'All Stores' : assignedStore?.name || item.storeId}
-                          </span>
                         </td>
 
                         {/* Stock */}
@@ -427,23 +397,8 @@ export const AdminOfferProducts: React.FC = () => {
                 )}
               </div>
 
-              {/* Store & Stock & Status Row */}
+              {/* Stock & Status Row */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-zinc-800 mb-1">Showroom Store</label>
-                  <select
-                    value={storeId}
-                    onChange={(e) => setStoreId(e.target.value)}
-                    className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-900 focus:outline-none"
-                  >
-                    <option value="ALL">All Stores</option>
-                    {stores.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
 
                 <div>
                   <label className="block text-xs font-bold text-zinc-800 mb-1">Promotional Stock</label>

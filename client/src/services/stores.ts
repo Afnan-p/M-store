@@ -65,28 +65,10 @@ function loadStoresFromStorage(): Store[] {
     localStorage.removeItem('mstore_stores_db_v2');
 
     const data = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (data) {
+    if (data !== null) {
       const parsed: Store[] = JSON.parse(data);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        const parsedMap = new Map(parsed.map((s) => [s.id, s]));
-        
-        const mergedInitial: Store[] = INITIAL_STORES.map((initial) => {
-          const stored = parsedMap.get(initial.id);
-          if (!stored) return initial;
-          return {
-            ...initial,
-            ...stored,
-            image: stored.image || initial.image,
-            status: (stored.status === 'inactive' ? 'inactive' : 'active') as 'active' | 'inactive',
-          };
-        });
-
-        const initialIds = new Set(INITIAL_STORES.map((s) => s.id));
-        const customStores = parsed.filter((s) => !initialIds.has(s.id) && !LEGACY_STORE_IDS.has(s.id));
-
-        const updated = [...mergedInitial, ...customStores];
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
-        return updated;
+      if (Array.isArray(parsed)) {
+        return parsed;
       }
     }
   } catch (err) {
@@ -99,6 +81,9 @@ function loadStoresFromStorage(): Store[] {
 function saveStoresToStorage(stores: Store[]): void {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(stores));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('mstore_stores_updated'));
+    }
   } catch (err) {
     console.error('Failed to save stores to localStorage:', err);
   }
@@ -111,7 +96,7 @@ export const StoreService = {
 
   async getStores(): Promise<Store[]> {
     const remote = await fetchFromAPI<Store[]>('/stores');
-    if (remote && Array.isArray(remote) && remote.length > 0) {
+    if (remote && Array.isArray(remote)) {
       saveStoresToStorage(remote);
       return remote;
     }
@@ -174,8 +159,15 @@ export const StoreService = {
   async deleteStore(id: string): Promise<boolean> {
     const stores = loadStoresFromStorage();
     const filtered = stores.filter((s) => s.id !== id);
-    if (filtered.length === stores.length) return false;
     saveStoresToStorage(filtered);
+
+    try {
+      await fetchFromAPI<{ message: string }>(`/stores/${id}`, {
+        method: 'DELETE',
+      });
+    } catch (err) {
+      console.error('Failed to delete store on server API:', err);
+    }
     return true;
   },
 };

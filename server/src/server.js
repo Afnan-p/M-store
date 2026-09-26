@@ -48,17 +48,19 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Rate Limiting
 const generalApiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500, // 500 requests per 15 min window per IP
+  max: 5000, // 5000 requests per 15 min window per IP
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => process.env.NODE_ENV !== 'production',
   message: { message: 'Too many requests from this IP, please try again later.' },
 });
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 25, // 25 attempts per 15 min window
+  max: 100, // 100 attempts per 15 min window
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => process.env.NODE_ENV !== 'production',
   message: { message: 'Too many authentication attempts, please try again later.' },
 });
 
@@ -75,6 +77,8 @@ app.use('/api/upload', require('./routes/upload'));
 app.use('/api/offer-products', require('./routes/offerProducts'));
 app.use('/api/stock', require('./routes/stock'));
 app.use('/api/segments', require('./routes/segments'));
+app.use('/api/settings', require('./routes/settings'));
+app.use('/', require('./routes/sitemap'));
 
 // Root Endpoint
 app.get('/', (req, res) => {

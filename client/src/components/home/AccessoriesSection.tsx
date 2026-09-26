@@ -106,7 +106,14 @@ export const AccessoriesSection: React.FC = () => {
   const { activeStoreId } = useStore();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { ref, isVisible } = useScrollReveal<HTMLElement>({ threshold: 0.01, rootMargin: '300px 0px 300px 0px' });
+  const [showRightArrow, setShowRightArrow] = React.useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const checkScroll = () => {
+    if (!scrollContainerRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+    setShowRightArrow(scrollWidth > clientWidth + 5 && scrollLeft < scrollWidth - clientWidth - 10);
+  };
 
   const handleScroll = (direction: 'left' | 'right') => {
     if (scrollContainerRef.current) {
@@ -176,6 +183,21 @@ export const AccessoriesSection: React.FC = () => {
     product: p,
   }));
 
+  React.useEffect(() => {
+    checkScroll();
+    const el = scrollContainerRef.current;
+    if (el) {
+      el.addEventListener('scroll', checkScroll);
+      window.addEventListener('resize', checkScroll);
+    }
+    return () => {
+      if (el) {
+        el.removeEventListener('scroll', checkScroll);
+        window.removeEventListener('resize', checkScroll);
+      }
+    };
+  }, [displayAccessories]);
+
   return (
     <section ref={ref} className="py-9 sm:py-12 lg:py-11 bg-white border-b border-zinc-200/60">
       <div className={`max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 space-y-7 reveal-hidden ${isVisible ? 'reveal-visible' : ''}`}>
@@ -195,6 +217,18 @@ export const AccessoriesSection: React.FC = () => {
           </div>
 
           <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto shrink-0 pt-1 sm:pt-0">
+            {/* Animated Scroll Indicator Pill */}
+            {showRightArrow && (
+              <button
+                type="button"
+                onClick={() => handleScroll('right')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 hover:bg-rose-100 border border-rose-200/90 text-[#E50914] text-[11px] sm:text-xs font-extrabold tracking-wide shadow-2xs transition-all shrink-0 cursor-pointer active:scale-95"
+                title="Scroll right for more accessories"
+              >
+                <span>Scroll</span>
+                <ArrowRight className="w-3.5 h-3.5 animate-bounce-x" />
+              </button>
+            )}
             <div className="flex items-center gap-1.5 shrink-0">
               <button
                 type="button"
@@ -275,16 +309,36 @@ export const AccessoriesSection: React.FC = () => {
 
                   {/* Price & Action Row */}
                   <div className="space-y-1.5 sm:space-y-2.5 pt-2 border-t border-zinc-100 mt-auto">
-                    <div className="flex items-baseline gap-1 sm:gap-1.5 flex-wrap">
-                      <span className="font-display text-base sm:text-lg font-bold text-zinc-950 tracking-tight">
-                        {formatCurrency(item.price)}
-                      </span>
-                      {item.originalPrice && item.originalPrice > item.price && (
-                        <span className="text-[11px] sm:text-xs text-zinc-400 line-through font-normal">
-                          {formatCurrency(item.originalPrice)}
-                        </span>
-                      )}
-                    </div>
+                    {(() => {
+                      const effectiveOriginal = (item.originalPrice && item.originalPrice > item.price)
+                        ? item.originalPrice
+                        : Math.round(item.price * 1.15);
+                      
+                      const discountPct = effectiveOriginal > item.price
+                        ? Math.round(((effectiveOriginal - item.price) / effectiveOriginal) * 100)
+                        : 0;
+
+                      return (
+                        <div className="flex items-center justify-between gap-1 flex-wrap">
+                          <div className="flex items-baseline gap-1 sm:gap-1.5 flex-wrap">
+                            <span className="font-display text-base sm:text-lg font-bold text-zinc-950 tracking-tight">
+                              {formatCurrency(item.price)}
+                            </span>
+                            {effectiveOriginal > item.price && (
+                              <span className="text-[11px] sm:text-xs text-zinc-400 line-through font-normal">
+                                {formatCurrency(effectiveOriginal)}
+                              </span>
+                            )}
+                          </div>
+
+                          {discountPct > 0 && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[9.5px] sm:text-[10.5px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/90 shrink-0">
+                              <span>{discountPct}% OFF</span>
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     {/* Action Buttons: View Details & Clean WhatsApp Button */}
                     <div className="flex items-center gap-1.5 sm:gap-2 h-8 sm:h-9">

@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import { Phone, Mail, MapPin, Clock, ArrowRight, MessageSquare, Truck, ShieldCheck, Headphones } from 'lucide-react';
 import { getGeneralWhatsAppLink } from '../../utils/whatsapp';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
+import { useSettings } from '../../context/SettingsContext';
 
 export const Footer: React.FC = () => {
   const [emailInput, setEmailInput] = useState('');
   const { ref, isVisible } = useScrollReveal<HTMLElement>({ threshold: 0.05 });
+  const { settings } = useSettings();
 
   const handleNewsletter = (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,6 +112,7 @@ export const Footer: React.FC = () => {
                   { label: 'Home', path: '/' },
                   { label: 'iPhones', path: '/iphones' },
                   { label: 'Used iPhones', path: '/used-iphones' },
+                  { label: 'Android', path: '/category/android' },
                   { label: 'Accessories', path: '/accessories' },
                   { label: 'Offers', path: '/offers' },
                   { label: 'Stores', path: '/stores' },
@@ -137,28 +140,32 @@ export const Footer: React.FC = () => {
 
               <ul className="space-y-3 text-xs text-zinc-700">
                 <li className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-zinc-100/80 border border-zinc-200/80 flex items-center justify-center shrink-0 text-zinc-800 shadow-2xs">
-                    <Phone className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="font-bold text-zinc-800">+91 98765 43210</span>
+                  <a href={`tel:${(settings.phone || '').replace(/\s+/g, '')}`} className="flex items-center gap-3 hover:text-zinc-950 transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-zinc-100/80 border border-zinc-200/80 flex items-center justify-center shrink-0 text-zinc-800 shadow-2xs">
+                      <Phone className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="font-bold text-zinc-800">{settings.phone}</span>
+                  </a>
                 </li>
                 <li className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-zinc-100/80 border border-zinc-200/80 flex items-center justify-center shrink-0 text-zinc-800 shadow-2xs">
-                    <Mail className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="font-bold text-zinc-800">admin@mstore.in</span>
+                  <a href={`mailto:${settings.email}`} className="flex items-center gap-3 hover:text-zinc-950 transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-zinc-100/80 border border-zinc-200/80 flex items-center justify-center shrink-0 text-zinc-800 shadow-2xs">
+                      <Mail className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="font-bold text-zinc-800">{settings.email}</span>
+                  </a>
                 </li>
                 <li className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-zinc-100/80 border border-zinc-200/80 flex items-center justify-center shrink-0 text-zinc-800 shadow-2xs">
                     <MapPin className="w-3.5 h-3.5" />
                   </div>
-                  <span className="font-bold text-zinc-800">Kootanad, Palakkad</span>
+                  <span className="font-bold text-zinc-800">{settings.address}</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-zinc-100/80 border border-zinc-200/80 flex items-center justify-center shrink-0 text-zinc-800 shadow-2xs">
                     <Clock className="w-3.5 h-3.5" />
                   </div>
-                  <span className="font-bold text-zinc-800 text-[11px]">Mon - Sun: 10AM - 9PM</span>
+                  <span className="font-bold text-zinc-800 text-[11px]">{settings.workingHours}</span>
                 </li>
               </ul>
             </div>
@@ -310,6 +317,7 @@ export const Footer: React.FC = () => {
                     { label: 'Home', path: '/' },
                     { label: 'iPhones', path: '/iphones' },
                     { label: 'Used iPhones', path: '/used-iphones' },
+                    { label: 'Android', path: '/category/android' },
                     { label: 'Accessories', path: '/accessories' },
                     { label: 'Offers', path: '/offers' },
                     { label: 'Stores', path: '/stores' },
@@ -421,7 +429,7 @@ export const Footer: React.FC = () => {
       </div>
 
       {/* Bottom Copyright Bar - Pure White Background with Clean Top Border */}
-      <div className="bg-white text-zinc-500 py-5 px-4 sm:px-8 lg:px-12 border-t border-zinc-200/80">
+      <div className="bg-white text-zinc-500 pt-5 pb-28 lg:pb-5 px-4 sm:px-8 lg:px-12 border-t border-zinc-200/80">
         <div className="max-w-[1440px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-zinc-500 text-center sm:text-left">
           
           {/* Left Copyright */}

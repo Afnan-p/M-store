@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { AdminLayout } from '../../components/admin/AdminLayout';
 import { StatsCard } from '../../components/admin/StatsCard';
 import { useProducts } from '../../hooks/useProducts';
-import { useStore } from '../../context/StoreContext';
 import { OfferProductService } from '../../services/offerProducts';
 import { ProductService } from '../../services/products';
 import type { OfferProduct } from '../../types/offerProduct';
@@ -11,7 +10,6 @@ import type { Product } from '../../types/product';
 import { Toast } from '../../components/common/Toast';
 import {
   Search,
-  Store as StoreIcon,
   Filter,
   Sparkles,
   Gift,
@@ -21,11 +19,9 @@ import {
 
 export const AdminOffers: React.FC = () => {
   const { products, loading: productsLoading, refreshProducts } = useProducts();
-  const { stores } = useStore();
 
   const [offerProducts, setOfferProducts] = useState<OfferProduct[]>([]);
   const [search, setSearch] = useState('');
-  const [selectedStoreFilter, setSelectedStoreFilter] = useState('ALL');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState('ALL');
   const [toastMsg, setToastMsg] = useState('');
 
@@ -44,15 +40,11 @@ export const AdminOffers: React.FC = () => {
   const filteredProductsWithOffers = productsWithOffers.filter((p) => {
     const matchSearch =
       !search.trim() ||
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.model.toLowerCase().includes(search.toLowerCase()) ||
+      (p.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (p.model || '').toLowerCase().includes(search.toLowerCase()) ||
       (p.offer?.title && p.offer.title.toLowerCase().includes(search.toLowerCase()));
 
     if (!matchSearch) return false;
-
-    if (selectedStoreFilter !== 'ALL' && selectedStoreFilter !== 'all' && (p.storeId || 'store001') !== selectedStoreFilter && p.storeId !== 'ALL' && p.storeId !== 'all') {
-      return false;
-    }
 
     const offerStatus = p.offer?.status || 'active';
     if (selectedStatusFilter !== 'ALL' && offerStatus !== selectedStatusFilter) {
@@ -66,12 +58,6 @@ export const AdminOffers: React.FC = () => {
   const activeOffersCount = productsWithOffers.filter(
     (p) => (p.offer?.status || 'active') === 'active'
   ).length;
-
-  const storesWithOffersCount = new Set(
-    productsWithOffers
-      .filter((p) => (p.offer?.status || 'active') === 'active')
-      .map((p) => p.storeId || 'store001')
-  ).size;
 
   // Toggle Offer Status ON / OFF directly
   const handleToggleOfferStatus = async (product: Product) => {
@@ -109,7 +95,7 @@ export const AdminOffers: React.FC = () => {
           <Link to="/mstore-management-portal/products/new?type=iphone">
             <button className="px-4 py-2 bg-[#E50914] text-white hover:bg-red-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
               <Plus className="w-3.5 h-3.5" />
-              <span>Add iPhone + Offer</span>
+              <span>Add Device + Offer</span>
             </button>
           </Link>
         </div>
@@ -118,7 +104,7 @@ export const AdminOffers: React.FC = () => {
       {toastMsg && <Toast message={toastMsg} onClose={() => setToastMsg('')} />}
 
       {/* Metric Cards Row (Clean Product-Based Metrics) */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <StatsCard
           title="ACTIVE OFFERS"
           value={activeOffersCount}
@@ -133,15 +119,9 @@ export const AdminOffers: React.FC = () => {
           icon={<Gift className="w-4 h-4 text-purple-600" />}
           accentColor="border-purple-500/30"
         />
-        <StatsCard
-          title="STORES WITH OFFERS"
-          value={storesWithOffersCount}
-          subtitle="Showroom coverage"
-          icon={<StoreIcon className="w-4 h-4 text-zinc-900" />}
-        />
       </div>
 
-      {/* Control Bar: Search + Store Filter + Status Filter */}
+      {/* Control Bar: Search + Status Filter */}
       <div className="bg-white p-4 rounded-2xl border border-zinc-200 shadow-sm space-y-3">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3 flex-1">
@@ -155,23 +135,6 @@ export const AdminOffers: React.FC = () => {
                 placeholder="Search products or free offer titles..."
                 className="w-full pl-10 pr-4 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#E50914]"
               />
-            </div>
-
-            {/* Store Filter */}
-            <div className="flex items-center gap-1.5 bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-xs">
-              <StoreIcon className="w-3.5 h-3.5 text-[#E50914]" />
-              <select
-                value={selectedStoreFilter}
-                onChange={(e) => setSelectedStoreFilter(e.target.value)}
-                className="bg-transparent font-bold text-zinc-900 text-xs focus:outline-none cursor-pointer"
-              >
-                <option value="ALL">All Stores</option>
-                {stores.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
             </div>
 
             {/* Status Filter */}
@@ -220,7 +183,6 @@ export const AdminOffers: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredProductsWithOffers.map((product) => {
-              const assignedStore = stores.find((s) => s.id === (product.storeId || 'store001'));
               const offerObj = product.offer;
               const isOfferActive = (offerObj?.status || 'active') === 'active';
 
@@ -251,14 +213,6 @@ export const AdminOffers: React.FC = () => {
                           </div>
                         </div>
                       </div>
-
-                      {/* Store Badge */}
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-zinc-100 text-zinc-800 border border-zinc-200 whitespace-nowrap">
-                        <StoreIcon className="w-3 h-3 text-[#E50914]" />
-                        {product.storeId === 'ALL' || product.storeId === 'all'
-                          ? 'All Stores'
-                          : (assignedStore?.name || product.storeId || 'Store 1')}
-                      </span>
                     </div>
 
                     {/* Offer Title Banner */}

@@ -10,8 +10,8 @@ const protect = (req, res, next) => {
     try {
       token = req.headers.authorization.split(' ')[1];
 
-      // Handle mock/dev tokens generated during client development
-      if (token && token.startsWith('mock_jwt_token_')) {
+      // Handle mock/dev tokens ONLY during local development mode
+      if (process.env.NODE_ENV !== 'production' && token && token.startsWith('mock_jwt_token_')) {
         req.user = { id: 'admin_dev', role: 'admin' };
         return next();
       }
@@ -23,8 +23,7 @@ const protect = (req, res, next) => {
       req.user = decoded;
       return next();
     } catch (error) {
-      // In dev mode or mock token fallback, gracefully set admin user
-      if (token && (token.startsWith('mock_jwt_token_') || process.env.NODE_ENV !== 'production')) {
+      if (process.env.NODE_ENV !== 'production') {
         req.user = { id: 'admin_dev', role: 'admin' };
         return next();
       }
@@ -32,7 +31,7 @@ const protect = (req, res, next) => {
     }
   }
 
-  // Graceful fallback for local development if auth header was missing
+  // Graceful fallback ONLY for local development if auth header was missing
   if (process.env.NODE_ENV !== 'production') {
     req.user = { id: 'admin_dev', role: 'admin' };
     return next();

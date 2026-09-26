@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useProducts } from '../../hooks/useProducts';
 import { useSegments } from '../../hooks/useSegments';
 import { useStore } from '../../context/StoreContext';
@@ -8,17 +8,25 @@ import { ProductGrid } from './ProductGrid';
 import { CustomSelect } from '../common/CustomSelect';
 import { ShieldCheck, SlidersHorizontal, MapPin } from 'lucide-react';
 import type { Product } from '../../types/product';
+import { SEO } from '../common/SEO';
+import { generateBreadcrumbSchema } from '../../utils/seo';
+import { isNonIPhoneDevice, isIPhoneNewProduct, isIPhoneUsedProduct, isAndroidProduct, isAndroidNewProduct, isAndroidUsedProduct, getAndroidBrandName } from '../../utils/categoryUtils';
+
 
 interface PhoneCategoryPageProps {
   categoryType: 'NEW' | 'USED';
 }
 
 export const PhoneCategoryPage: React.FC<PhoneCategoryPageProps> = ({ categoryType }) => {
-  const { segmentSlug } = useParams<{ segmentSlug?: string }>();
+  const { segmentSlug, categorySlug } = useParams<{ segmentSlug?: string; categorySlug?: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { products, loading } = useProducts();
   const { segments } = useSegments();
   const { activeStoreId, activeStore } = useStore();
+
+  const rawQueryCategory = searchParams.get('category') || categorySlug;
+  const targetCategorySlug = rawQueryCategory ? rawQueryCategory.toLowerCase().trim() : null;
 
   const disabledSegmentSlugs = useMemo(() => {
     const set = new Set<string>();
@@ -35,6 +43,7 @@ export const PhoneCategoryPage: React.FC<PhoneCategoryPageProps> = ({ categoryTy
   const [selectedModelSlug, setSelectedModelSlug] = useState<string>('all');
   const [selectedStorage, setSelectedStorage] = useState<string>('all');
   const [selectedColor, setSelectedColor] = useState<string>('all');
+  const [selectedConditionFilter, setSelectedConditionFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc'>('featured');
 
   // Base path for navigation
@@ -89,21 +98,48 @@ export const PhoneCategoryPage: React.FC<PhoneCategoryPageProps> = ({ categoryTy
         return false;
       }
 
-      // 1. Strict Category Partitioning (Never mix New and Used)
-      if (p.category === 'accessory') return false;
-      
-      if (categoryType === 'NEW') {
-        if (p.category === 'iphone-used') {
-          return false;
+      // 1. Dynamic Category vs Built-in Category Filtering
+      if (targetCategorySlug) {
+        const pCat = (p.category || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+        const pSubCat = (p.subCategory || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+        const targetNorm = targetCategorySlug.replace(/[^a-z0-9]+/g, '-');
+        
+        const isAndroidCategory = targetNorm === 'android' || targetNorm === 'used-android' || targetNorm === 'android-used' || targetNorm === 'android-new';
+        const isIPhoneCategory = targetNorm === 'iphones' || targetNorm === 'used-iphones' || targetNorm === 'iphone-new' || targetNorm === 'iphone-used' || targetNorm === 'iphone';
+
+        if (isIPhoneCategory) {
+          if (!isIPhoneProduct(p)) return false;
+          if (targetNorm === 'used-iphones' || targetNorm === 'iphone-used') {
+            if (!isIPhoneUsedProduct(p)) return false;
+          } else if (targetNorm === 'iphone-new') {
+            if (!isIPhoneNewProduct(p)) return false;
+          }
+        } else if (isAndroidCategory) {
+          if (!isAndroidProduct(p)) return false;
+          if (targetNorm === 'used-android' || targetNorm === 'android-used') {
+            if (!isAndroidUsedProduct(p)) return false;
+          } else if (targetNorm === 'android-new') {
+            if (!isAndroidNewProduct(p)) return false;
+          }
+        } else {
+          const isMatch = pCat === targetNorm || pSubCat === targetNorm || pCat.includes(targetNorm);
+          if (!isMatch) return false;
         }
       } else {
-        // USED Category
-        if (p.category === 'iphone-new') {
-          return false;
+        // Exclude accessories from iPhone catalog pages
+        if (p.category === 'accessory') return false;
+
+        // Exclude non-iPhone / Android / Normal Phone devices (Realme, Samsung, etc.) from iPhone catalog pages
+        if (isNonIPhoneDevice(p)) return false;
+
+        if (categoryType === 'NEW') {
+          if (!isIPhoneNewProduct(p)) return false;
+        } else {
+          if (!isIPhoneUsedProduct(p)) return false;
         }
       }
 
-      // 2. Model Segment Filtering
+      // 2. Model Segment / Brand Filtering
       if (selectedModelSlug !== 'all') {
         const normalize = (s: string) =>
           (s || '')
@@ -116,16 +152,31 @@ export const PhoneCategoryPage: React.FC<PhoneCategoryPageProps> = ({ categoryTy
         const productNameNorm = normalize(p.name || '');
         const segmentSlugNorm = normalize(p.segmentSlug || '');
 
-        let isMatch = p.segmentSlug === selectedModelSlug || (segmentSlugNorm.length > 0 && segmentSlugNorm === targetNorm);
+        const isAndroidCat = targetCategorySlug && (
+          targetCategorySlug.includes('android') ||
+          targetCategorySlug === 'normal-phones' ||
+          targetCategorySlug === 'smartphones'
+        );
 
-        if (!isMatch) {
-          if (targetNorm.includes('max')) {
-            isMatch = productNameNorm.includes(targetNorm) || productModelNorm.includes(targetNorm);
-          } else {
-            const matchesNameOrModel =
-              productNameNorm.includes(targetNorm) || productModelNorm.includes(targetNorm);
-            const isMaxProduct = productNameNorm.includes('max') || productModelNorm.includes('max');
-            isMatch = matchesNameOrModel && !isMaxProduct;
+        let isMatch = false;
+
+        if (isAndroidCat || isAndroidProduct(p)) {
+          const brandNorm = normalize(getAndroidBrandName(p));
+          isMatch = brandNorm === targetNorm ||
+                    productNameNorm.includes(targetNorm) ||
+                    productModelNorm.includes(targetNorm);
+        } else {
+          isMatch = p.segmentSlug === selectedModelSlug || (segmentSlugNorm.length > 0 && segmentSlugNorm === targetNorm);
+
+          if (!isMatch) {
+            if (targetNorm.includes('max')) {
+              isMatch = productNameNorm.includes(targetNorm) || productModelNorm.includes(targetNorm);
+            } else {
+              const matchesNameOrModel =
+                productNameNorm.includes(targetNorm) || productModelNorm.includes(targetNorm);
+              const isMaxProduct = productNameNorm.includes('max') || productModelNorm.includes('max');
+              isMatch = matchesNameOrModel && !isMaxProduct;
+            }
           }
         }
 
@@ -146,9 +197,16 @@ export const PhoneCategoryPage: React.FC<PhoneCategoryPageProps> = ({ categoryTy
         }
       }
 
+      // 5. Condition Attribute Filter (New vs Pre-Owned)
+      if (selectedConditionFilter !== 'all') {
+        const isUsed = p.category === 'iphone-used' || (p.condition && p.condition !== 'Brand New');
+        if (selectedConditionFilter === 'new' && isUsed) return false;
+        if (selectedConditionFilter === 'used' && !isUsed) return false;
+      }
+
       return true;
     });
-  }, [products, categoryType, selectedModelSlug, selectedStorage, selectedColor, activeStoreId, disabledSegmentSlugs]);
+  }, [products, categoryType, selectedModelSlug, selectedStorage, selectedColor, selectedConditionFilter, activeStoreId, disabledSegmentSlugs]);
 
   // Sorted Products by Price / Featured
   const sortedProducts = useMemo(() => {
@@ -161,29 +219,64 @@ export const PhoneCategoryPage: React.FC<PhoneCategoryPageProps> = ({ categoryTy
     return list;
   }, [filteredProducts, sortBy]);
 
-  const pageTitle = categoryType === 'NEW' ? 'iPhone' : 'Used iPhones';
-  const pageSubtitle =
-    categoryType === 'NEW'
-      ? 'Latest models. Great deals. Genuine devices.'
-      : 'Verified pre-owned devices. Quality checked.';
+  const formattedCategoryName = targetCategorySlug
+    ? targetCategorySlug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+    : (categoryType === 'NEW' ? 'iPhone' : 'Used iPhones');
+
+  const pageTitle = formattedCategoryName;
+  const pageSubtitle = targetCategorySlug
+    ? `Explore our collection of ${formattedCategoryName} devices.`
+    : (categoryType === 'NEW'
+        ? 'Latest models. Great deals. Genuine devices.'
+        : 'Verified pre-owned devices. Quality checked.');
 
   const sectionTitle =
     selectedModelSlug === 'all'
-      ? categoryType === 'NEW'
-        ? 'All iPhones'
-        : 'All Used iPhones'
+      ? (targetCategorySlug ? `All ${formattedCategoryName}` : (categoryType === 'NEW' ? 'All iPhones' : 'All Used iPhones'))
       : selectedModelSlug.replace(/-/g, ' ').toUpperCase();
 
-  const sectionSubtitle =
-    categoryType === 'NEW'
-      ? 'Handpicked devices. Great performance. Great prices.'
-      : 'Verified pre-owned devices. Great value.';
+  const sectionSubtitle = targetCategorySlug
+    ? `Handpicked ${formattedCategoryName} devices at best prices.`
+    : (categoryType === 'NEW'
+        ? 'Handpicked devices. Great performance. Great prices.'
+        : 'Verified pre-owned devices. Great value.');
 
   const hasActiveAttributeFilters =
-    selectedStorage !== 'all' || selectedColor !== 'all' || sortBy !== 'featured';
+    selectedStorage !== 'all' || selectedColor !== 'all' || selectedConditionFilter !== 'all' || sortBy !== 'featured';
+
+  const modelFormatted = selectedModelSlug !== 'all'
+    ? selectedModelSlug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+    : '';
+
+  const seoTitle = categoryType === 'NEW'
+    ? modelFormatted ? `${modelFormatted} - New iPhones Kerala | M Store` : 'New iPhones Kerala | Buy Latest iPhones | M Store'
+    : modelFormatted ? `${modelFormatted} - Pre-Owned iPhones Kerala | M Store` : 'Used iPhones Kerala | Pre-Owned iPhones with Warranty | M Store';
+
+  const seoDescription = categoryType === 'NEW'
+    ? modelFormatted
+      ? `Buy genuine brand new Apple ${modelFormatted} in Kerala. Check price, color options, storage specs and physical store availability at M Store.`
+      : `Shop brand-new sealed Apple iPhones at best prices in Kerala. Check available storage, color options, warranty & store availability at M Store showrooms.`
+    : modelFormatted
+      ? `Buy quality-checked pre-owned ${modelFormatted} with warranty in Kerala. Verified used Apple iPhone with trusted inspection at M Store.`
+      : `Buy quality-checked pre-owned iPhones with warranty in Kerala. Thoroughly tested used Apple iPhones at best value prices across Kootanad, Kecheri, Mattom & Pattambi.`;
+
+  const breadcrumbsList = [
+    { name: 'Home', url: '/' },
+    { name: categoryType === 'NEW' ? 'iPhones' : 'Used iPhones', url: basePath },
+  ];
+  if (selectedModelSlug !== 'all') {
+    breadcrumbsList.push({ name: modelFormatted, url: `${basePath}/${selectedModelSlug}` });
+  }
+
+  const categoryJsonLd = generateBreadcrumbSchema(breadcrumbsList);
 
   return (
     <div className="bg-[#FAF9F6] min-h-screen pt-24 sm:pt-32 pb-24 font-sans text-zinc-900 overflow-x-hidden">
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        jsonLd={categoryJsonLd}
+      />
       <div className="max-w-[1440px] mx-auto px-3 sm:px-8 lg:px-12 space-y-5 sm:space-y-6">
         
         {/* Compact Page Title Header */}
@@ -202,12 +295,84 @@ export const PhoneCategoryPage: React.FC<PhoneCategoryPageProps> = ({ categoryTy
           </p>
         </div>
 
-        {/* Dynamic Centered Horizontal Model / Series Navigation */}
-        <PhoneModelNavigation
-          categoryType={categoryType}
-          selectedModelSlug={selectedModelSlug}
-          onSelectModel={handleSelectModel}
-        />
+        {/* Dynamic Navigation: Show iPhone Segments ONLY for iPhone categories, show Brand/Model Pills for dynamic categories */}
+        {(!targetCategorySlug || ['iphone-new', 'iphone-used', 'iphones', 'used-iphones'].includes(targetCategorySlug)) ? (
+          <PhoneModelNavigation
+            categoryType={categoryType}
+            selectedModelSlug={selectedModelSlug}
+            onSelectModel={handleSelectModel}
+          />
+        ) : (
+          /* Brand / Model Quick Filters for Custom Categories */
+          (() => {
+            const isAndroidCat = targetCategorySlug && (
+              targetCategorySlug.includes('android') ||
+              targetCategorySlug === 'normal-phones' ||
+              targetCategorySlug === 'smartphones'
+            );
+
+            const categoryProducts = products.filter((p: Product) => {
+              if (isAndroidCat) {
+                return isAndroidProduct(p);
+              }
+              if (targetCategorySlug) {
+                const pCat = (p.category || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+                const pSubCat = (p.subCategory || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+                const targetNorm = targetCategorySlug.replace(/[^a-z0-9]+/g, '-');
+                return pCat === targetNorm || pSubCat === targetNorm || pCat.includes(targetNorm);
+              }
+              return true;
+            });
+
+            const rawBrands = categoryProducts
+              .map((p) => {
+                if (isAndroidCat || isAndroidProduct(p)) {
+                  return getAndroidBrandName(p);
+                }
+                const val = p.model && p.model !== 'Accessory' && !p.model.toLowerCase().includes('iphone') ? p.model : p.name;
+                return val ? val.trim() : '';
+              })
+              .filter((m) => m && !m.toLowerCase().includes('iphone'));
+
+            const uniqueBrands = Array.from(
+              new Set(rawBrands.map((b) => b.charAt(0).toUpperCase() + b.slice(1)))
+            );
+
+            if (uniqueBrands.length === 0) return null;
+
+            return (
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+                <button
+                  onClick={() => setSelectedModelSlug('all')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 border ${
+                    selectedModelSlug === 'all'
+                      ? 'bg-zinc-900 text-white border-zinc-900 shadow-xs'
+                      : 'bg-white text-zinc-700 border-zinc-200 hover:border-zinc-300'
+                  }`}
+                >
+                  All {formattedCategoryName}
+                </button>
+                {uniqueBrands.map((b) => {
+                  const bSlug = b.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                  const isSelected = selectedModelSlug === bSlug || selectedModelSlug === b.toLowerCase();
+                  return (
+                    <button
+                      key={b}
+                      onClick={() => setSelectedModelSlug(isSelected ? 'all' : bSlug)}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 border ${
+                        isSelected
+                          ? 'bg-[#E50914] text-white border-[#E50914] shadow-xs'
+                          : 'bg-white text-zinc-700 border-zinc-200 hover:border-zinc-300'
+                      }`}
+                    >
+                      {b}
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()
+        )}
 
         {/* Attribute Filtering Bar (Storage, Color, Price Sort) */}
         <div className="bg-white border border-zinc-200/90 rounded-2xl p-3 sm:p-4 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4 w-full relative z-20">
@@ -224,6 +389,7 @@ export const PhoneCategoryPage: React.FC<PhoneCategoryPageProps> = ({ categoryTy
                 onClick={() => {
                   setSelectedStorage('all');
                   setSelectedColor('all');
+                  setSelectedConditionFilter('all');
                   setSortBy('featured');
                 }}
                 className="text-[11px] font-bold text-[#E50914] hover:underline px-1 py-0.5"
@@ -267,6 +433,24 @@ export const PhoneCategoryPage: React.FC<PhoneCategoryPageProps> = ({ categoryTy
                 ]}
                 value={selectedColor}
                 onChange={(val) => setSelectedColor(val)}
+                size="sm"
+                buttonClassName="bg-zinc-50 border-zinc-200 text-zinc-900 text-xs font-bold"
+              />
+            </div>
+
+            {/* Condition Filter */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 min-w-0">
+              <span className="text-[10px] sm:text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block sm:inline">
+                Condition
+              </span>
+              <CustomSelect
+                options={[
+                  { value: 'all', label: 'All Conditions' },
+                  { value: 'new', label: 'Brand New' },
+                  { value: 'used', label: 'Pre-Owned' },
+                ]}
+                value={selectedConditionFilter}
+                onChange={(val) => setSelectedConditionFilter(val)}
                 size="sm"
                 buttonClassName="bg-zinc-50 border-zinc-200 text-zinc-900 text-xs font-bold"
               />

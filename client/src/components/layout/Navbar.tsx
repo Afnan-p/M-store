@@ -30,7 +30,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const { wishlistCount, setIsWishlistOpen } = useWishlist();
   const { products } = useProducts();
-  const { stores, activeStoreId, setActiveStoreId } = useStore();
+  const { stores, activeStoreId, setActiveStoreId, isMultiStoreEnabled } = useStore();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -91,10 +91,11 @@ export const Navbar: React.FC<NavbarProps> = () => {
   const searchResults = searchQuery.trim()
     ? products.filter(
         (p) =>
-          p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.storage.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.category.toLowerCase().includes(searchQuery.toLowerCase())
+          (p.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (p.model || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (p.storage || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (p.category || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (p.brand || '').toLowerCase().includes(searchQuery.toLowerCase())
       )
     : [];
 
@@ -108,6 +109,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
     { name: 'Home', path: '/' },
     { name: 'iPhones', path: '/iphones' },
     { name: 'Used iPhones', path: '/used-iphones' },
+    { name: 'Android', path: '/category/android' },
     { name: 'Accessories', path: '/accessories' },
     { name: 'Offers', path: '/offers' },
     { name: 'Stores', path: '/stores' },
@@ -118,6 +120,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
     { name: 'Home', path: '/', icon: Home },
     { name: 'iPhones', path: '/iphones', icon: Smartphone },
     { name: 'Used', path: '/used-iphones', icon: RotateCcw },
+    { name: 'Android', path: '/category/android', icon: Smartphone },
     { name: 'Accessories', path: '/accessories', icon: Headphones },
     { name: 'Offers', path: '/offers', icon: Tag },
     { name: 'About', path: '/about', icon: Info },
@@ -178,7 +181,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
           <div className="flex items-center gap-2 sm:gap-3">
             
             {/* Active Store Switcher Pill (Desktop Only) */}
-            <div className="hidden lg:block">
+            <div className={isMultiStoreEnabled ? "hidden lg:block" : "hidden"}>
               <CustomSelect
                 options={[
                   { value: 'ALL', label: 'All Stores' },

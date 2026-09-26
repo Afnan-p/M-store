@@ -111,9 +111,6 @@ export const ManageStockModal: React.FC<ManageStockModalProps> = ({
               </div>
             )}
             <div className="space-y-1 overflow-hidden">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#E50914]">
-                {storeName}
-              </span>
               <h4 className="font-bold text-zinc-950 text-sm truncate">
                 {stockRecord.productName || stockRecord.productId}
               </h4>

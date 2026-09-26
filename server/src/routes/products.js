@@ -26,24 +26,14 @@ function slugify(text) {
     .replace(/-+$/, '');
 }
 
-// GET /api/products - Fetch products with optional filtering by storeId or category
+// GET /api/products - Fetch products with optional filtering by category
 router.get('/', async (req, res) => {
-  const { category, storeId, available } = req.query;
+  const { category, available } = req.query;
 
   try {
     if (isDbConnected()) {
       const filter = {};
       if (category) filter.category = category;
-      if (storeId && storeId !== 'ALL' && storeId !== 'all') {
-        filter.$or = [
-          { storeId: storeId },
-          { storeIds: storeId },
-          { storeId: 'ALL' },
-          { storeId: 'all' },
-          { storeIds: 'ALL' },
-          { storeIds: 'all' },
-        ];
-      }
       if (available !== undefined) {
         filter.available = available === 'true';
       }
@@ -158,49 +148,35 @@ router.get('/:id', async (req, res) => {
 
 // POST /api/products - Create new product (Admin Only)
 router.post('/', protect, adminOnly, async (req, res) => {
-  const rawStoreIds = Array.isArray(req.body.storeIds) ? req.body.storeIds : [req.body.storeId || 'ALL'];
-  const finalStoreIds = rawStoreIds.length > 0 ? rawStoreIds : ['ALL'];
+  const initialQty = req.body.initialStock !== undefined ? Number(req.body.initialStock) : (req.body.stock !== undefined ? Number(req.body.stock) : 10);
 
   const newProduct = {
     ...req.body,
     slug: req.body.slug || slugify(req.body.name || ''),
-    storeId: finalStoreIds.includes('ALL') ? 'ALL' : (finalStoreIds[0] || 'ALL'),
-    storeIds: finalStoreIds,
+    stock: initialQty,
     id: req.body.id || 'p_' + Date.now(),
     createdAt: req.body.createdAt || new Date().toISOString(),
   };
 
   inMemoryProducts.unshift(newProduct);
 
-  const initialQty = req.body.initialStock !== undefined ? Number(req.body.initialStock) : 10;
-  const STORES = ['store001', 'store002', 'store003', 'store004'];
-
   try {
     if (isDbConnected()) {
       const created = await Product.create(newProduct);
 
-      const isAllStores = finalStoreIds.includes('ALL') || finalStoreIds.includes('all');
-
-      // Auto-create ProductStock records in MongoDB ONLY for assigned store(s)
-      for (const storeId of STORES) {
-        const isMatch = isAllStores || finalStoreIds.includes(storeId);
-
-        if (isMatch) {
-          await ProductStock.findOneAndUpdate(
-            { productId: newProduct.id, storeId },
-            {
-              $set: { stock: initialQty },
-              $setOnInsert: {
-                id: `stock_${newProduct.id}_${storeId}`,
-                productId: newProduct.id,
-                storeId,
-                itemType: 'product',
-              },
-            },
-            { upsert: true, new: true }
-          );
-        }
-      }
+      await ProductStock.findOneAndUpdate(
+        { productId: newProduct.id, storeId: 'global' },
+        {
+          $set: { stock: initialQty },
+          $setOnInsert: {
+            id: `stock_${newProduct.id}_global`,
+            productId: newProduct.id,
+            storeId: 'global',
+            itemType: 'product',
+          },
+        },
+        { upsert: true, new: true }
+      );
 
       return res.status(201).json(created);
     }

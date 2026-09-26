@@ -1,6 +1,6 @@
 import type { ProductOffer } from './offerProduct';
 
-export type CategoryType = 'iphone-new' | 'iphone-used' | 'accessory';
+export type CategoryType = 'iphone-new' | 'iphone-used' | 'android-new' | 'android-used' | 'accessory' | string;
 
 export type ConditionType = 'Brand New' | 'Like New' | 'Excellent' | 'Good';
 

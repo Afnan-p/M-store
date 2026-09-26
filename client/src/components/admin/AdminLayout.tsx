@@ -41,7 +41,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                 {subtitle && <p className="text-[10px] sm:text-xs text-zinc-500 mt-0.5 line-clamp-1">{subtitle}</p>}
               </div>
             </div>
-            {action && <div className="shrink-0 flex items-center gap-2">{action}</div>}
+            {action && <div className="w-full sm:w-auto flex flex-wrap items-center gap-2">{action}</div>}
           </header>
 
           {/* Body Content */}

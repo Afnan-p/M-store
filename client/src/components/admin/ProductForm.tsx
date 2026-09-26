@@ -6,11 +6,13 @@ import { OfferProductService } from '../../services/offerProducts';
 import { StockService } from '../../services/stock';
 import { ProductService } from '../../services/products';
 import { useSegments } from '../../hooks/useSegments';
+import { useCategories } from '../../hooks/useCategories';
 import { useStore } from '../../context/StoreContext';
 import { Button } from '../common/Button';
 import { CustomSelect } from '../common/CustomSelect';
 import { uploadImageToCloudinary } from '../../services/cloudinary';
 import { Upload, X, Gift, Trash2, Check, Plus, ChevronDown, AlertCircle } from 'lucide-react';
+import { isIPhoneProduct, isAndroidProduct, getAndroidBrandName } from '../../utils/categoryUtils';
 
 const POPULAR_COLORS = [
   'Natural Titanium',
@@ -35,6 +37,81 @@ const POPULAR_COLORS = [
   'Black / Standard',
 ];
 
+const STANDARD_ANDROID_BRANDS = [
+  'Samsung',
+  'Realme',
+  'Xiaomi',
+  'OnePlus',
+  'Oppo',
+  'Vivo',
+  'Google Pixel',
+  'Nothing',
+  'POCO',
+  'iQOO',
+  'Motorola',
+  'Nokia',
+];
+
+const resolveFormCategory = (initialData?: Product, defaultCat?: CategoryType): CategoryType => {
+  if (!initialData) return defaultCat || 'iphone-used';
+
+  const cat = (initialData.category || '').toLowerCase().trim();
+  if (cat === 'accessory') return 'accessory';
+
+  if (isAndroidProduct(initialData)) {
+    if (cat === 'android-new') return 'android-new';
+    if (cat === 'android-used' || cat === 'used-android') return 'android-used';
+    return initialData.condition === 'Brand New' ? 'android-new' : 'android-used';
+  }
+
+  if (isIPhoneProduct(initialData)) {
+    if (cat === 'iphone-new') return 'iphone-new';
+    if (cat === 'iphone-used' || cat === 'used-iphones') return 'iphone-used';
+    return initialData.condition === 'Brand New' ? 'iphone-new' : 'iphone-used';
+  }
+
+  if (['iphone-new', 'iphone-used', 'android-new', 'android-used', 'accessory'].includes(cat)) {
+    return cat as CategoryType;
+  }
+
+  return defaultCat || 'iphone-used';
+};
+
+const resolveInitialModel = (initialData?: Product, category?: CategoryType, isAccessoryForm?: boolean): { model: string; isCustom: boolean } => {
+  if (isAccessoryForm) return { model: 'Accessory', isCustom: false };
+  if (!initialData) return { model: '', isCustom: false };
+
+  const rawModel = (initialData.model || '').trim();
+
+  if (category === 'android-new' || category === 'android-used') {
+    const matchedStd = STANDARD_ANDROID_BRANDS.find((b) => b.toLowerCase() === rawModel.toLowerCase());
+    if (matchedStd) return { model: matchedStd, isCustom: false };
+
+    const derivedBrand = getAndroidBrandName(initialData);
+    const matchedDerived = STANDARD_ANDROID_BRANDS.find((b) => b.toLowerCase() === derivedBrand.toLowerCase());
+    if (matchedDerived) return { model: matchedDerived, isCustom: false };
+
+    if (rawModel && !rawModel.toLowerCase().includes('titanium') && !rawModel.toLowerCase().includes('iphone') && rawModel !== 'Accessory') {
+      return { model: rawModel, isCustom: true };
+    }
+
+    if (derivedBrand && derivedBrand !== 'Android' && derivedBrand !== 'Other') {
+      return { model: derivedBrand, isCustom: false };
+    }
+
+    return { model: '', isCustom: false };
+  }
+
+  if (rawModel) return { model: rawModel, isCustom: false };
+  return { model: 'iPhone 15 Pro', isCustom: false };
+};
+
+const resolveInitialColor = (initialData?: Product, isAccessoryForm?: boolean): { color: string; isCustom: boolean } => {
+  const c = initialData?.color ? initialData.color.trim() : (isAccessoryForm ? 'White / Standard' : 'Natural Titanium');
+  const isPopular = POPULAR_COLORS.some((p) => p.toLowerCase() === c.toLowerCase());
+  return { color: c, isCustom: Boolean(initialData?.color && !isPopular) };
+};
+
 interface ProductFormProps {
   initialData?: Product;
   defaultCategory?: CategoryType;
@@ -50,39 +127,49 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 }) => {
   const navigate = useNavigate();
   const { segments } = useSegments();
-  const { stores } = useStore();
+  const { activeCategories } = useCategories();
+  const { stores, isMultiStoreEnabled } = useStore();
 
   const isAccessoryForm = defaultCategory === 'accessory' || initialData?.category === 'accessory';
 
-  const initialCat = isAccessoryForm ? 'accessory' : (initialData?.category || defaultCategory || 'iphone-used');
+  const initialCat = resolveFormCategory(initialData, defaultCategory);
+  const initialModelInfo = resolveInitialModel(initialData, initialCat, isAccessoryForm);
+  const initialColorInfo = resolveInitialColor(initialData, isAccessoryForm);
+
   const [name, setName] = useState(initialData?.name || '');
-  const [model, setModel] = useState(initialData?.model || (isAccessoryForm ? 'Accessory' : 'iPhone 15 Pro'));
+  const [model, setModel] = useState(initialModelInfo.model);
   
   const initialStoreIds = initialData?.storeIds && initialData.storeIds.length > 0
     ? initialData.storeIds
     : [initialData?.storeId || 'ALL'];
   const [selectedStoreIds, setSelectedStoreIds] = useState<string[]>(initialStoreIds);
 
-  const [category, setCategory] = useState<CategoryType>(initialCat === 'accessory' && !isAccessoryForm ? 'iphone-used' : initialCat);
+  const [category, setCategory] = useState<CategoryType>(initialCat);
   const [subCategory, setSubCategory] = useState(initialData?.subCategory || 'Chargers & Adapters');
   const [customSubCategory, setCustomSubCategory] = useState('');
   const [isCustomSubCat, setIsCustomSubCat] = useState(false);
   const [price, setPrice] = useState<number | string>(initialData?.price || '');
-  const [originalPrice, setOriginalPrice] = useState<number | string>(initialData?.originalPrice || '');
+  const [originalPrice, setOriginalPrice] = useState<number | string>(
+    initialData?.originalPrice
+      ? initialData.originalPrice
+      : initialData?.price
+      ? Math.round(Number(initialData.price) * 1.15)
+      : ''
+  );
   const [initialStock, setInitialStock] = useState<number | string>(10);
   const [storage, setStorage] = useState(initialData?.storage || (isAccessoryForm ? 'N/A' : '128GB'));
   const [condition, setCondition] = useState<ConditionType>(initialData?.condition || 'Excellent');
   const [batteryHealth, setBatteryHealth] = useState<number | string>(initialData?.batteryHealth || 92);
-  const [color, setColor] = useState(initialData?.color || (isAccessoryForm ? 'White / Standard' : 'Natural Titanium'));
+  const [color, setColor] = useState(initialColorInfo.color);
   const [description, setDescription] = useState(initialData?.description || '');
   const [available, setAvailable] = useState<boolean>(initialData?.available ?? true);
   const [featured, setFeatured] = useState<boolean>(initialData?.featured ?? false);
 
   const [segmentId, setSegmentId] = useState(initialData?.segmentId || '');
   const [segmentSlug, setSegmentSlug] = useState(initialData?.segmentSlug || '');
-  const [isCustomModel, setIsCustomModel] = useState(false);
-  const [isCustomColor, setIsCustomColor] = useState(false);
-  const replacementStatus = initialData?.replacementStatus || 'No Replacement';
+  const [isCustomModel, setIsCustomModel] = useState(initialModelInfo.isCustom);
+  const [isCustomColor, setIsCustomColor] = useState(initialColorInfo.isCustom);
+  const [replacementStatus, setReplacementStatus] = useState<string>(initialData?.replacementStatus || 'No Replacement');
   const warranty = initialData?.warranty || (isAccessoryForm ? 'M Store 6 Month Warranty' : 'M Store 3 Month Warranty');
 
   const isAllStoresSelected = selectedStoreIds.includes('ALL') || selectedStoreIds.includes('all');
@@ -116,10 +203,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   useEffect(() => {
     if (isAccessoryForm) {
       setCategory('accessory');
-    } else if (category === 'accessory') {
-      setCategory('iphone-used');
     }
   }, [defaultCategory, isAccessoryForm]);
+
 
   // Fetch initial stock level if editing an existing product
   useEffect(() => {
@@ -244,7 +330,15 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     e.preventDefault();
     setOfferError('');
 
-    if (!name.trim() || !price) return;
+    if (!name.trim() || !price || !originalPrice) {
+      setOfferError('⚠️ Please fill in all required fields including Selling Price (₹) and Regular MRP (₹).');
+      return;
+    }
+
+    if (Number(originalPrice) < Number(price)) {
+      setOfferError('⚠️ Regular MRP (₹) must be greater than or equal to Selling Price (₹).');
+      return;
+    }
 
     if (offerEnabled && offerItems.length === 0) {
       setOfferError('⚠️ Enable Offer is ON! You must choose at least one free offer product from the dropdown and click "+ Add Item" before publishing.');
@@ -260,8 +354,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       const selectedSeg = segments.find((s) => s.id === segmentId);
       const finalSegmentId = selectedSeg ? selectedSeg.id : segmentId || undefined;
       const finalSegmentSlug = selectedSeg ? selectedSeg.slug : segmentSlug || undefined;
-      const finalSubCategory = isCustomSubCat ? customSubCategory : subCategory;
-      const finalCategory = isAccessoryForm ? 'accessory' : (category === 'accessory' ? 'iphone-used' : category);
+      const finalSubCategory = isAccessoryForm ? (isCustomSubCat ? customSubCategory : subCategory) : undefined;
+      const finalCategory = isAccessoryForm ? 'accessory' : category;
 
       // Auto generate offer title if empty but items selected
       let autoOfferTitle = offerTitle.trim();
@@ -279,11 +373,22 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         ? 'ALL'
         : (selectedStoreIds[0] || 'ALL');
 
+      const isIPhoneCategory = finalCategory === 'iphone-new' || finalCategory === 'iphone-used';
+      const finalModel = isAccessoryForm
+        ? 'Accessory'
+        : isIPhoneCategory
+        ? (model || 'iPhone 15 Pro')
+        : (model && model !== 'iPhone 15 Pro' && model !== 'Accessory' ? model.trim() : (name.trim() || 'Device'));
+
+      const isBrandNew = finalCategory === 'iphone-new' || finalCategory === 'android-new';
+      const isUsed = finalCategory === 'iphone-used' || finalCategory === 'android-used' || (condition !== 'Brand New' && !isBrandNew);
+      const finalCondition = isAccessoryForm ? 'Brand New' : (isBrandNew ? 'Brand New' : (condition === 'Brand New' ? 'Excellent' : condition));
+
       await onSubmit({
         name: name.trim(),
-        model: isAccessoryForm ? 'Accessory' : model,
-        segmentId: isAccessoryForm ? undefined : finalSegmentId,
-        segmentSlug: isAccessoryForm ? undefined : finalSegmentSlug,
+        model: finalModel,
+        segmentId: isIPhoneCategory ? finalSegmentId : undefined,
+        segmentSlug: isIPhoneCategory ? finalSegmentSlug : undefined,
         subCategory: isAccessoryForm ? finalSubCategory : undefined,
         storeId: primaryStoreId,
         storeIds: selectedStoreIds,
@@ -292,9 +397,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         originalPrice: originalPrice ? Number(originalPrice) : (null as any),
         initialStock: Number(initialStock),
         storage: isAccessoryForm ? 'N/A' : storage,
-        condition: isAccessoryForm || finalCategory === 'iphone-new' ? 'Brand New' : condition,
-        batteryHealth: !isAccessoryForm && finalCategory === 'iphone-used' && batteryHealth ? Number(batteryHealth) : undefined,
-        replacementStatus: !isAccessoryForm && finalCategory === 'iphone-used' ? replacementStatus : undefined,
+        condition: finalCondition,
+        batteryHealth: !isAccessoryForm && isUsed && batteryHealth ? Number(batteryHealth) : (null as any),
+        replacementStatus: !isAccessoryForm && isUsed ? replacementStatus : '',
         color,
         warranty,
         description,
@@ -341,73 +446,75 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             />
           </div>
 
-          {/* Showroom Store Multi-Selection Cards */}
-          <div className="space-y-3 col-span-1 md:col-span-2 bg-zinc-50/90 p-3.5 sm:p-4 border border-zinc-200/90 rounded-2xl overflow-hidden">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
-              <label className="text-xs font-bold text-zinc-900 flex items-center gap-1.5 flex-wrap">
-                <span>Showroom Store Branch Availability *</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-100 text-[#E50914] font-semibold">
-                  Multi-Store Selection
+          {/* Showroom Store Multi-Selection Cards (Rendered only when Multi-Store Mode is enabled) */}
+          {isMultiStoreEnabled && (
+            <div className="space-y-3 col-span-1 md:col-span-2 bg-zinc-50/90 p-3.5 sm:p-4 border border-zinc-200/90 rounded-2xl overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                <label className="text-xs font-bold text-zinc-900 flex items-center gap-1.5 flex-wrap">
+                  <span>Showroom Store Branch Availability *</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-100 text-[#E50914] font-semibold">
+                    Multi-Store Selection
+                  </span>
+                </label>
+                <span className="text-[11px] text-zinc-500 font-medium">
+                  {isAllStoresSelected
+                    ? 'Available in All Branches'
+                    : `${selectedStoreIds.length} Store${selectedStoreIds.length > 1 ? 's' : ''} Ticked`}
                 </span>
-              </label>
-              <span className="text-[11px] text-zinc-500 font-medium">
-                {isAllStoresSelected
-                  ? 'Available in All Branches'
-                  : `${selectedStoreIds.length} Store${selectedStoreIds.length > 1 ? 's' : ''} Ticked`}
-              </span>
-            </div>
+              </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 pt-1">
-              {/* Option 1: ALL STORES */}
-              <button
-                type="button"
-                onClick={() => toggleStoreSelection('ALL')}
-                className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all text-left cursor-pointer ${
-                  isAllStoresSelected
-                    ? 'bg-[#E50914] text-white border-[#E50914] shadow-sm'
-                    : 'bg-white text-zinc-700 border-zinc-200 hover:border-zinc-300 hover:bg-zinc-100/70'
-                }`}
-              >
-                <div
-                  className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
-                    isAllStoresSelected ? 'bg-white border-white text-[#E50914]' : 'border-zinc-300 bg-white'
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 pt-1">
+                {/* Option 1: ALL STORES */}
+                <button
+                  type="button"
+                  onClick={() => toggleStoreSelection('ALL')}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all text-left cursor-pointer ${
+                    isAllStoresSelected
+                      ? 'bg-[#E50914] text-white border-[#E50914] shadow-sm'
+                      : 'bg-white text-zinc-700 border-zinc-200 hover:border-zinc-300 hover:bg-zinc-100/70'
                   }`}
                 >
-                  {isAllStoresSelected && <Check className="w-3 h-3 stroke-[3]" />}
-                </div>
-                <span className="truncate">All Stores</span>
-              </button>
-
-              {/* Option 2..N: Individual Showrooms */}
-              {stores.map((s) => {
-                const isChecked = isAllStoresSelected || selectedStoreIds.includes(s.id);
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => toggleStoreSelection(s.id)}
-                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all text-left cursor-pointer ${
-                      isChecked
-                        ? 'bg-red-50 text-[#E50914] border-red-300 shadow-2xs'
-                        : 'bg-white text-zinc-700 border-zinc-200 hover:border-zinc-300 hover:bg-zinc-100/70'
+                  <div
+                    className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                      isAllStoresSelected ? 'bg-white border-white text-[#E50914]' : 'border-zinc-300 bg-white'
                     }`}
                   >
-                    <div
-                      className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
-                        isChecked ? 'bg-[#E50914] border-[#E50914] text-white' : 'border-zinc-300 bg-white'
+                    {isAllStoresSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                  </div>
+                  <span className="truncate">All Stores</span>
+                </button>
+
+                {/* Option 2..N: Individual Showrooms */}
+                {stores.map((s) => {
+                  const isChecked = isAllStoresSelected || selectedStoreIds.includes(s.id);
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => toggleStoreSelection(s.id)}
+                      className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all text-left cursor-pointer ${
+                        isChecked
+                          ? 'bg-red-50 text-[#E50914] border-red-300 shadow-2xs'
+                          : 'bg-white text-zinc-700 border-zinc-200 hover:border-zinc-300 hover:bg-zinc-100/70'
                       }`}
                     >
-                      {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
-                    </div>
-                    <div className="truncate min-w-0">
-                      <div className="truncate">{s.name}</div>
-                      <div className="text-[9.5px] text-zinc-500 font-normal truncate">{s.location}</div>
-                    </div>
-                  </button>
-                );
-              })}
+                      <div
+                        className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                          isChecked ? 'bg-[#E50914] border-[#E50914] text-white' : 'border-zinc-300 bg-white'
+                        }`}
+                      >
+                        {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
+                      </div>
+                      <div className="truncate min-w-0">
+                        <div className="truncate">{s.name}</div>
+                        <div className="text-[9.5px] text-zinc-500 font-normal truncate">{s.location}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Product Category */}
           <div className="space-y-2">
@@ -422,11 +529,20 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             ) : (
               <CustomSelect
                 fullWidth
-                value={category === 'accessory' ? 'iphone-used' : category}
-                onChange={(val) => setCategory(val as CategoryType)}
+                value={category}
+                onChange={(val) => {
+                  setCategory(val as CategoryType);
+                  if (val === 'iphone-new' || val === 'android-new') {
+                    setCondition('Brand New');
+                  } else if ((val === 'iphone-used' || val === 'android-used') && condition === 'Brand New') {
+                    setCondition('Excellent');
+                  }
+                }}
                 options={[
                   { value: 'iphone-new', label: 'Brand New iPhone' },
                   { value: 'iphone-used', label: 'Pre-Owned / Used iPhone' },
+                  { value: 'android-new', label: 'Brand New Android' },
+                  { value: 'android-used', label: 'Pre-Owned / Used Android' },
                 ]}
                 buttonClassName="py-2.5 px-4 text-xs font-bold rounded-xl"
               />
@@ -456,6 +572,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                       { value: 'Cases & Covers', label: 'Cases & Covers' },
                       { value: 'Speakers & Audio', label: 'Speakers & Audio' },
                       { value: 'Cables & Protection', label: 'Cables & Protection' },
+                      ...activeCategories
+                        .filter((c) => !['iPhones', 'Used iPhones', 'Accessories', 'Offers'].includes(c.name))
+                        .map((c) => ({ value: c.name, label: c.name })),
                       { value: 'CUSTOM', label: '+ Add Custom Sub-Category...' },
                     ]}
                     buttonClassName="py-2.5 px-4 text-xs font-bold rounded-xl"
@@ -482,31 +601,74 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             </div>
           )}
 
-          {/* iPhone Model Series Dropdown */}
+          {/* iPhone Model Series vs Custom Brand / Model Field */}
           {!isAccessoryForm && (
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-zinc-700">Apple Model Series (Segment) *</label>
-              {!isCustomModel ? (
+              <label className="text-xs font-semibold text-zinc-700">
+                {(category === 'iphone-new' || category === 'iphone-used')
+                  ? 'Apple Model Series (Segment) *'
+                  : 'Brand / Model Name (Optional)'}
+              </label>
+              {(category === 'iphone-new' || category === 'iphone-used') ? (
+                !isCustomModel ? (
+                  <CustomSelect
+                    fullWidth
+                    value={model}
+                    onChange={(val) => {
+                      if (val === 'CUSTOM') {
+                        setIsCustomModel(true);
+                        setModel('');
+                      } else {
+                        const selectedSeg = segments.find((s) => s.name === val);
+                        setModel(val);
+                        if (selectedSeg) {
+                          setSegmentId(selectedSeg.id);
+                          setSegmentSlug(selectedSeg.slug);
+                        }
+                      }
+                    }}
+                    options={[
+                      { value: '', label: 'Select Apple Model Series...' },
+                      ...segments.map((seg) => ({ value: seg.name, label: seg.name })),
+                      { value: 'CUSTOM', label: '+ Add / Type Custom Model...' },
+                    ]}
+                    buttonClassName="py-2.5 px-4 text-xs font-bold rounded-xl"
+                  />
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      required
+                      value={model}
+                      onChange={(e) => setModel(e.target.value)}
+                      placeholder="e.g. iPhone 16 Pro Max"
+                      className="flex-1 px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-900 focus:outline-none focus:border-[#E50914]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setIsCustomModel(false)}
+                      className="px-3 py-2 bg-zinc-200 text-zinc-700 rounded-xl text-xs font-bold hover:bg-zinc-300"
+                    >
+                      Select List
+                    </button>
+                  </div>
+                )
+              ) : !isCustomModel ? (
                 <CustomSelect
                   fullWidth
-                  value={model}
+                  value={STANDARD_ANDROID_BRANDS.includes(model) ? model : (model === 'iPhone 15 Pro' || model === 'Accessory' ? '' : model)}
                   onChange={(val) => {
                     if (val === 'CUSTOM') {
                       setIsCustomModel(true);
                       setModel('');
                     } else {
-                      const selectedSeg = segments.find((s) => s.name === val);
                       setModel(val);
-                      if (selectedSeg) {
-                        setSegmentId(selectedSeg.id);
-                        setSegmentSlug(selectedSeg.slug);
-                      }
                     }
                   }}
                   options={[
-                    { value: '', label: 'Select Apple Model Series...' },
-                    ...segments.map((seg) => ({ value: seg.name, label: seg.name })),
-                    { value: 'CUSTOM', label: '+ Add / Type Custom Model...' },
+                    { value: '', label: 'Select Android Brand...' },
+                    ...STANDARD_ANDROID_BRANDS.map((b) => ({ value: b, label: b })),
+                    { value: 'CUSTOM', label: '+ Type Custom Brand...' },
                   ]}
                   buttonClassName="py-2.5 px-4 text-xs font-bold rounded-xl"
                 />
@@ -517,7 +679,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     required
                     value={model}
                     onChange={(e) => setModel(e.target.value)}
-                    placeholder="e.g. iPhone 16 Pro Max"
+                    placeholder="e.g. Samsung, Realme, Oppo"
                     className="flex-1 px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-900 focus:outline-none focus:border-[#E50914]"
                   />
                   <button
@@ -569,14 +731,15 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
           {/* Regular MRP */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-zinc-700">Regular MRP (₹) Optional</label>
+            <label className="text-xs font-semibold text-zinc-700">Regular MRP (₹) *</label>
             <input
               type="number"
+              required
               min="0"
               value={originalPrice}
               onChange={(e) => setOriginalPrice(e.target.value)}
               placeholder="e.g. 94900"
-              className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs text-zinc-900 focus:outline-none focus:border-[#E50914]"
+              className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-900 focus:outline-none focus:border-[#E50914]"
             />
           </div>
 
@@ -594,16 +757,15 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             />
           </div>
 
-          {/* Condition */}
-          {!isAccessoryForm && (
+          {/* Condition (Only shown for Used/Pre-Owned devices) */}
+          {!isAccessoryForm && (category === 'iphone-used' || category === 'android-used' || (condition !== 'Brand New' && category !== 'iphone-new' && category !== 'android-new')) && (
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-zinc-700">Device Condition</label>
+              <label className="text-xs font-semibold text-zinc-700">Device Condition *</label>
               <CustomSelect
                 fullWidth
-                value={condition}
+                value={condition === 'Brand New' ? 'Excellent' : condition}
                 onChange={(val) => setCondition(val as ConditionType)}
                 options={[
-                  { value: 'Brand New', label: 'Brand New (Sealed)' },
                   { value: 'Like New', label: 'Like New (Mint Condition)' },
                   { value: 'Excellent', label: 'Excellent' },
                   { value: 'Good', label: 'Good' },
@@ -659,20 +821,39 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             )}
           </div>
 
-          {/* Battery Health for Used */}
-          {!isAccessoryForm && category === 'iphone-used' && (
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-zinc-700">Battery Health %</label>
-              <input
-                type="number"
-                min="50"
-                max="100"
-                value={batteryHealth}
-                onChange={(e) => setBatteryHealth(e.target.value)}
-                placeholder="e.g. 96"
-                className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-900 focus:outline-none focus:border-[#E50914]"
-              />
-            </div>
+          {/* Pre-Owned Fields: Battery Health & Service Status */}
+          {!isAccessoryForm && (category === 'iphone-used' || category === 'android-used' || (condition !== 'Brand New' && category !== 'iphone-new' && category !== 'android-new')) && (
+            <>
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-zinc-700">Pre-Owned Battery Health %</label>
+                <input
+                  type="number"
+                  min="50"
+                  max="100"
+                  value={batteryHealth}
+                  onChange={(e) => setBatteryHealth(e.target.value)}
+                  placeholder="e.g. 96"
+                  className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-900 focus:outline-none focus:border-[#E50914]"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-zinc-700">Service / Replacement Status</label>
+                <CustomSelect
+                  fullWidth
+                  value={replacementStatus}
+                  onChange={(val) => setReplacementStatus(val)}
+                  options={[
+                    { value: 'No Replacement', label: 'No Replacement (100% Original)' },
+                    { value: 'Display Changed (Original)', label: 'Display Changed (Original Parts)' },
+                    { value: 'Battery Replaced', label: 'Battery Replaced (Brand New)' },
+                    { value: 'Back Glass Replaced', label: 'Back Glass Replaced' },
+                    { value: 'Quality Inspected & Certified', label: 'Quality Inspected & Certified' },
+                  ]}
+                  buttonClassName="py-2.5 px-4 text-xs font-bold rounded-xl"
+                />
+              </div>
+            </>
           )}
         </div>
 
@@ -1049,7 +1230,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       <div className="flex items-center justify-end gap-3 pt-2">
         <button
           type="button"
-          onClick={() => navigate('/admin/products')}
+          onClick={() => navigate('/mstore-management-portal/products')}
           className="px-6 py-3 rounded-xl text-xs font-bold text-zinc-600 hover:bg-zinc-200 transition-colors"
         >
           Cancel

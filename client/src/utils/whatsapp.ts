@@ -1,6 +1,7 @@
 import { BRAND_CONFIG } from '../services/config';
 import type { Product } from '../types/product';
 import { OfferProductService } from '../services/offerProducts';
+import { SettingsService } from '../services/settings';
 import { getProductFullUrl } from './slug';
 
 /**
@@ -33,9 +34,9 @@ function formatINR(price: number): string {
 /**
  * Generates a clean, professional, human-readable WhatsApp enquiry link
  */
-export function getWhatsAppProductLink(product: Product, offerContext?: string): string {
+export function getWhatsAppProductLink(product: Product, offerContext?: string, whatsappNumberOverride?: string): string {
   if (!product) {
-    return getGeneralWhatsAppLink();
+    return getGeneralWhatsAppLink(undefined, whatsappNumberOverride);
   }
 
   const productUrl = getProductFullUrl(product);
@@ -102,8 +103,9 @@ export function getWhatsAppProductLink(product: Product, offerContext?: string):
 
   const message = lines.join('\n');
 
-  // Format phone number (digits only)
-  const cleanPhone = (import.meta.env.VITE_WHATSAPP_NUMBER || BRAND_CONFIG.whatsappNumberClean || '918891003031').replace(/\D/g, '');
+  // Format phone number (digits only with dynamic SettingsService priority)
+  const rawNumber = whatsappNumberOverride || SettingsService.getSettingsSync().whatsappNumber || import.meta.env.VITE_WHATSAPP_NUMBER || BRAND_CONFIG.whatsappNumberClean || '918891003031';
+  const cleanPhone = rawNumber.replace(/\D/g, '');
 
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 }
@@ -111,12 +113,13 @@ export function getWhatsAppProductLink(product: Product, offerContext?: string):
 /**
  * Generates a clean general WhatsApp enquiry link for general customer questions
  */
-export function getGeneralWhatsAppLink(customMessage?: string): string {
+export function getGeneralWhatsAppLink(customMessage?: string, whatsappNumberOverride?: string): string {
   const defaultMsg =
     customMessage ||
     `👋 Hi M Store, I would like to inquire about available iPhones, pre-owned devices, offers, or showroom locations in Kerala.`;
 
-  const cleanPhone = (import.meta.env.VITE_WHATSAPP_NUMBER || BRAND_CONFIG.whatsappNumberClean || '918891003031').replace(/\D/g, '');
+  const rawNumber = whatsappNumberOverride || SettingsService.getSettingsSync().whatsappNumber || import.meta.env.VITE_WHATSAPP_NUMBER || BRAND_CONFIG.whatsappNumberClean || '918891003031';
+  const cleanPhone = rawNumber.replace(/\D/g, '');
 
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(defaultMsg)}`;
 }

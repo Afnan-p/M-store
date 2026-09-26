@@ -1,28 +1,28 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, ArrowRight, MapPin, Flame, Sparkles, Gift, Layers, Package } from 'lucide-react';
+import { Heart, ArrowRight, Flame, Sparkles, Gift, Layers, Package } from 'lucide-react';
 import type { Product } from '../../types/product';
 import { formatCurrency } from '../../utils/formatters';
 import { getWhatsAppProductLink } from '../../utils/whatsapp';
 import { getProductPath } from '../../utils/slug';
 import { useWishlist } from '../../context/WishlistContext';
 import { useStore } from '../../context/StoreContext';
+import { useSettings } from '../../context/SettingsContext';
 import { OfferProductService } from '../../services/offerProducts';
+import { getOptimizedImageUrl } from '../../services/cloudinary';
 
 interface ProductCardProps {
   product: Product;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const isUsed = product.category === 'iphone-used';
-  const isNew = product.category === 'iphone-new';
-  const whatsappUrl = getWhatsAppProductLink(product);
+  const isUsed = product.category === 'iphone-used' || (product.condition && product.condition !== 'Brand New');
+  const isNew = product.category === 'iphone-new' || product.condition === 'Brand New';
+  const { settings } = useSettings();
+  const whatsappUrl = getWhatsAppProductLink(product, undefined, settings.whatsappNumber);
   const { isInWishlist, toggleWishlist } = useWishlist();
-  const { stores, activeStoreId } = useStore();
+  const { activeStoreId } = useStore();
   const liked = isInWishlist(product.id);
-
-  const productStore = stores.find((s) => s.id === product.storeId);
-  const storeName = productStore ? (productStore.name.includes('-') ? productStore.name.split('-')[1].trim() : productStore.name) : null;
 
   // Resolve offer items with thumbnail images
   const offerThumbnails = ((): { name: string; image: string; qty: number }[] => {
@@ -51,24 +51,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     : (activeStoreId && activeStoreId !== 'ALL' && activeStoreId !== 'all' ? activeStoreId : 'ALL');
 
   const currentStockNum = ((): number => {
+    if (product.stock !== undefined && product.stock !== null) {
+      return Math.max(0, Number(product.stock));
+    }
     try {
       const raw = localStorage.getItem('mstore_stock_records_v2') || localStorage.getItem('mstore_stock_records_v1');
       if (raw) {
         const list = JSON.parse(raw);
-        const matches = list.filter(
+        const match = list.find(
           (s: any) =>
             s.productId === product.id ||
             (s.productName && s.productName.toLowerCase().trim() === product.name.toLowerCase().trim())
         );
 
-        if (matches.length > 0) {
-          if (targetStoreId === 'ALL') {
-            return matches.reduce((sum: number, item: any) => sum + Math.max(0, Number(item.stock) || 0), 0);
-          }
-          const item = matches.find((s: any) => s.storeId === targetStoreId);
-          if (item && item.stock !== undefined && item.stock !== null) {
-            return Math.max(0, Number(item.stock));
-          }
+        if (match && match.stock !== undefined && match.stock !== null) {
+          return Math.max(0, Number(match.stock));
         }
       }
     } catch (err) {
@@ -77,24 +74,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     return (product as any).initialStock !== undefined ? Number((product as any).initialStock) : 10;
   })();
 
-  const isOutOfStock = currentStockNum === 0;
-  const isLowStock = currentStockNum >= 1 && currentStockNum <= 5;
+  const isOutOfStock = currentStockNum === 0 || product.available === false;
+  const isLowStock = !isOutOfStock && currentStockNum >= 1 && currentStockNum <= 5;
 
   // Swatches mapping matching Apple-style dots
   const getSwatches = () => {
+    const colorName = product.color && product.color.trim() !== '' ? product.color.trim() : 'Standard';
     if (product.name.includes('15 Pro')) {
-      return { dots: ['#8F8A81', '#3B3B3D', '#2B3A4A', '#F2F1EC'], name: 'Natural Titanium' };
+      return { dots: ['#8F8A81', '#3B3B3D', '#2B3A4A', '#F2F1EC'], name: colorName };
     }
     if (product.name.includes('15')) {
-      return { dots: ['#2D2E30', '#D2E4D6', '#E3E4E8', '#FCE3E7'], name: 'Black' };
+      return { dots: ['#2D2E30', '#D2E4D6', '#E3E4E8', '#FCE3E7'], name: colorName };
     }
     if (product.name.includes('14 Pro')) {
-      return { dots: ['#4B3D59', '#F5E5C9', '#363638', '#E3E4E6'], name: 'Deep Purple' };
+      return { dots: ['#4B3D59', '#F5E5C9', '#363638', '#E3E4E6'], name: colorName };
     }
     if (product.name.includes('14')) {
-      return { dots: ['#A0C0D6', '#E5D5E8', '#2C3035', '#FAFAF5', '#E33B44'], name: 'Blue' };
+      return { dots: ['#A0C0D6', '#E5D5E8', '#2C3035', '#FAFAF5', '#E33B44'], name: colorName };
     }
-    return { dots: ['#8F8A81', '#3B3B3D', '#2B3A4A'], name: product.color || 'Default' };
+    return { dots: ['#8F8A81', '#3B3B3D', '#2B3A4A'], name: colorName };
   };
 
   const swatch = getSwatches();
@@ -190,7 +188,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {/* Product Image - Full Width Container */}
         <Link to={getProductPath(product)} className="w-full h-full flex items-center justify-center p-2 sm:p-3">
           <img
-            src={product.images[0] || '/images/placeholder-iphone.svg'}
+            src={getOptimizedImageUrl(product.images[0], { width: 500 })}
             alt={product.name}
             loading="lazy"
             onError={(e) => {
@@ -217,27 +215,41 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               {product.storage !== 'N/A' && <span>|</span>}
               <span className="truncate">{swatch.name}</span>
             </div>
-            {storeName && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9.5px] sm:text-[10.5px] font-semibold bg-red-50 text-[#E50914] border border-red-100 shrink-0">
-                <MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#E50914]" />
-                {storeName}
-              </span>
-            )}
           </div>
         </div>
 
         {/* Price Row */}
         <div className="space-y-1 sm:space-y-2 pt-1.5 border-t border-zinc-100 mt-auto">
-          <div className="flex items-baseline gap-1 sm:gap-1.5 flex-wrap">
-            <span className="font-display text-sm sm:text-[20px] font-bold text-zinc-950 tracking-tight">
-              {formatCurrency(product.price)}
-            </span>
-            {product.originalPrice && product.originalPrice > product.price && (
-              <span className="text-[10px] sm:text-xs text-zinc-400 line-through font-normal">
-                {formatCurrency(product.originalPrice)}
-              </span>
-            )}
-          </div>
+          {(() => {
+            const effectiveOriginal = (product.originalPrice && product.originalPrice > product.price)
+              ? product.originalPrice
+              : Math.round(product.price * 1.15);
+            
+            const discountPct = effectiveOriginal > product.price
+              ? Math.round(((effectiveOriginal - product.price) / effectiveOriginal) * 100)
+              : 0;
+
+            return (
+              <div className="flex items-center justify-between gap-1 flex-wrap">
+                <div className="flex items-baseline gap-1 sm:gap-1.5 flex-wrap">
+                  <span className="font-display text-sm sm:text-[20px] font-bold text-zinc-950 tracking-tight">
+                    {formatCurrency(product.price)}
+                  </span>
+                  {effectiveOriginal > product.price && (
+                    <span className="text-[10px] sm:text-xs text-zinc-400 line-through font-normal">
+                      {formatCurrency(effectiveOriginal)}
+                    </span>
+                  )}
+                </div>
+
+                {discountPct > 0 && (
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[9.5px] sm:text-[10.5px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/90 shrink-0">
+                    <span>{discountPct}% OFF</span>
+                  </span>
+                )}
+              </div>
+            );
+          })()}
 
           {/* 3. COMPACT BUTTON AREA: "View Details" & Modern Official WhatsApp Button */}
           <div className="flex items-center gap-1 sm:gap-2 pt-0.5 h-8 sm:h-9">

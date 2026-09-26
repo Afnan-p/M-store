@@ -58,11 +58,12 @@ export function useProducts() {
       // Search query
       if (filters.searchQuery.trim()) {
         const q = filters.searchQuery.toLowerCase();
-        const matchName = p.name.toLowerCase().includes(q);
-        const matchModel = p.model.toLowerCase().includes(q);
-        const matchStorage = p.storage.toLowerCase().includes(q);
-        const matchDesc = p.description.toLowerCase().includes(q);
-        if (!matchName && !matchModel && !matchStorage && !matchDesc) return false;
+        const matchName = (p.name || '').toLowerCase().includes(q);
+        const matchModel = (p.model || '').toLowerCase().includes(q);
+        const matchStorage = (p.storage || '').toLowerCase().includes(q);
+        const matchDesc = (p.description || '').toLowerCase().includes(q);
+        const matchBrand = (p.brand || '').toLowerCase().includes(q);
+        if (!matchName && !matchModel && !matchStorage && !matchDesc && !matchBrand) return false;
       }
 
       // Category

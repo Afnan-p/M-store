@@ -233,6 +233,20 @@
   transform: translate3d(0, 0, 0) scale3d(1, 1, 1) !important;
 }
 
+/* Horizontal Bounce Arrow Animation for Scroll Indicator */
+@keyframes bounceX {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+}
+
+.animate-bounce-x {
+  animation: bounceX 1.2s infinite ease-in-out;
+}
+
 /* Accessibility: Respect Prefers Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {

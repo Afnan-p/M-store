@@ -6,7 +6,7 @@ import { useStore } from '../../context/StoreContext';
 import { Button } from '../../components/common/Button';
 import { Toast } from '../../components/common/Toast';
 import { uploadImageToCloudinary } from '../../services/cloudinary';
-import { Plus, Edit, Store as StoreIcon, MapPin, Phone, X, Save, Upload } from 'lucide-react';
+import { Plus, Edit, Trash2, Store as StoreIcon, MapPin, Phone, X, Save, Upload } from 'lucide-react';
 
 export const AdminStores: React.FC = () => {
   const { refreshStores } = useStore();
@@ -18,6 +18,8 @@ export const AdminStores: React.FC = () => {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStore, setEditingStore] = useState<Store | null>(null);
+  const [storeToDelete, setStoreToDelete] = useState<Store | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Form Fields
   const [name, setName] = useState('');
@@ -127,6 +129,23 @@ export const AdminStores: React.FC = () => {
     }
   };
 
+  const confirmDeleteStore = async () => {
+    if (!storeToDelete) return;
+    try {
+      setIsDeleting(true);
+      await StoreService.deleteStore(storeToDelete.id);
+      await fetchStores();
+      await refreshStores();
+      setToastMsg(`Deleted store "${storeToDelete.name}"`);
+    } catch (err) {
+      console.error('Failed to delete store:', err);
+      alert('Could not delete store. Please try again.');
+    } finally {
+      setIsDeleting(false);
+      setStoreToDelete(null);
+    }
+  };
+
   return (
     <AdminLayout
       title="Physical Store Management"
@@ -138,6 +157,49 @@ export const AdminStores: React.FC = () => {
       }
     >
       {toastMsg && <Toast message={toastMsg} onClose={() => setToastMsg('')} />}
+
+      {/* Delete Confirmation Modal */}
+      {storeToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white border border-zinc-200 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl text-left">
+            <div className="flex items-center gap-3 text-rose-600">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5 text-rose-600" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-zinc-950">Delete Showroom Branch?</h3>
+                <p className="text-xs text-zinc-500 font-medium">This will permanently remove the store location.</p>
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs space-y-1">
+              <div className="font-bold text-zinc-900 text-sm">{storeToDelete.name}</div>
+              <div className="text-zinc-500 font-medium">
+                Location: <span className="text-zinc-800 font-semibold">{storeToDelete.location}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setStoreToDelete(null)}
+                disabled={isDeleting}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-zinc-600 hover:bg-zinc-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteStore}
+                disabled={isDeleting}
+                className="px-5 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-md transition-colors flex items-center gap-1.5"
+              >
+                {isDeleting ? 'Deleting...' : 'Yes, Delete Store'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stores List Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -205,13 +267,23 @@ export const AdminStores: React.FC = () => {
 
               <div className="pt-4 mt-4 border-t border-zinc-100 flex items-center justify-between">
                 <span className="text-[10px] font-mono text-zinc-400">ID: {store.id}</span>
-                <button
-                  onClick={() => openEditStoreModal(store)}
-                  className="px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-semibold flex items-center gap-1.5 transition-colors"
-                >
-                  <Edit className="w-3.5 h-3.5" />
-                  <span>Edit</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => openEditStoreModal(store)}
+                    className="px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-semibold flex items-center gap-1.5 transition-colors border border-zinc-200"
+                    title="Edit store details"
+                  >
+                    <Edit className="w-3.5 h-3.5" />
+                    <span>Edit</span>
+                  </button>
+                  <button
+                    onClick={() => setStoreToDelete(store)}
+                    className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold flex items-center justify-center transition-colors border border-rose-200/80"
+                    title="Delete store location"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
           ))

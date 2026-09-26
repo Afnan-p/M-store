@@ -28,69 +28,58 @@ function getLocalStockRecords(): ProductStock[] {
     console.error('Failed reading local stock records:', err);
   }
 
-  // Auto-sync: Ensure all products from ProductService have stock records for all store branches
+  // Deduplicate records by productId to ensure 1 single stock record per product
+  const uniqueRecordsMap = new Map<string, ProductStock>();
+  for (const r of records) {
+    const pid = String(r.productId);
+    if (!uniqueRecordsMap.has(pid)) {
+      uniqueRecordsMap.set(pid, {
+        ...r,
+        storeId: 'global',
+        id: `stock_${pid}_global`,
+      });
+    }
+  }
+  records = Array.from(uniqueRecordsMap.values());
+
+  // Auto-sync: Ensure all products from ProductService have 1 stock record
   const allProds = ProductService.getProductsSync();
   let modified = false;
 
   for (const prod of allProds) {
-    const isSpecificStore = Boolean(prod.storeId && prod.storeId !== 'ALL' && prod.storeId !== 'all');
-    const pStoreLower = String(prod.storeId || '').toLowerCase();
-
-    for (const storeId of STORES) {
-      const isMatch = !isSpecificStore || (
-        prod.storeId === storeId ||
-        (storeId === 'store001' && pStoreLower.includes('kootanad')) ||
-        (storeId === 'store002' && pStoreLower.includes('kecheri')) ||
-        (storeId === 'store003' && pStoreLower.includes('mattom')) ||
-        (storeId === 'store004' && pStoreLower.includes('pattambi'))
-      );
-
-      if (!isMatch) continue;
-
-      const exists = records.some((r) => r.productId === prod.id && r.storeId === storeId);
-      if (!exists) {
-        records.unshift({
-          id: `stock_${prod.id}_${storeId}`,
-          productId: prod.id,
-          storeId,
-          stock: 10,
-          itemType: 'product',
-          status: calculateStockStatus(10),
-          productName: prod.name,
-          productCategory: prod.category,
-          productImage: prod.images?.[0] || '/images/placeholder-iphone.svg',
-          productPrice: prod.price,
-          productStorage: prod.storage || '128GB',
-          updatedAt: new Date().toISOString(),
-        });
-        modified = true;
-      }
+    const pid = String(prod.id);
+    const exists = records.some((r) => String(r.productId) === pid);
+    if (!exists) {
+      records.unshift({
+        id: `stock_${pid}_global`,
+        productId: pid,
+        storeId: 'global',
+        stock: (prod as any).stock !== undefined ? Number((prod as any).stock) : 10,
+        itemType: 'product',
+        status: calculateStockStatus((prod as any).stock !== undefined ? Number((prod as any).stock) : 10),
+        productName: prod.name,
+        productCategory: prod.category,
+        productImage: prod.images?.[0] || '/images/placeholder-iphone.svg',
+        productPrice: prod.price,
+        productStorage: prod.storage || '128GB',
+        updatedAt: new Date().toISOString(),
+      });
+      modified = true;
     }
   }
 
-  // Purge any dummy records created for unassigned stores
-  const cleanedRecords = records.filter((r) => {
-    const prod = allProds.find((p) => p.id === r.productId);
-    if (prod && prod.storeId && prod.storeId !== 'ALL' && prod.storeId !== 'all') {
-      const pStoreLower = String(prod.storeId).toLowerCase();
-      const isMatch = (
-        prod.storeId === r.storeId ||
-        (r.storeId === 'store001' && pStoreLower.includes('kootanad')) ||
-        (r.storeId === 'store002' && pStoreLower.includes('kecheri')) ||
-        (r.storeId === 'store003' && pStoreLower.includes('mattom')) ||
-        (r.storeId === 'store004' && pStoreLower.includes('pattambi'))
-      );
-      if (!isMatch) return false;
-    }
-    return true;
-  });
+  // Purge any extra dummy stock records for deleted products
+  const activeProdIds = new Set(allProds.map((p) => String(p.id)));
+  const offerProds = OfferProductService.getOfferProductsSync();
+  offerProds.forEach((op) => activeProdIds.add(String(op.id)));
 
-  if (cleanedRecords.length !== records.length) {
-    records = cleanedRecords;
+  const cleaned = records.filter((r) => activeProdIds.has(String(r.productId)));
+  if (cleaned.length !== records.length) {
+    records = cleaned;
     modified = true;
   }
 
-  if (modified) {
+  if (modified || records.some((r) => r.storeId !== 'global')) {
     saveLocalStockRecords(records);
   }
 
@@ -138,25 +127,30 @@ function enrichStockRecords(records: ProductStock[]): ProductStock[] {
   const allProds = ProductService.getProductsSync();
   const offerProds = OfferProductService.getOfferProductsSync();
 
-  const prodMap = new Map(allProds.map((p) => [p.id, p]));
-  const offerMap = new Map(offerProds.map((op) => [op.id, op]));
+  const prodMap = new Map(allProds.map((p) => [String(p.id), p]));
+  const offerMap = new Map(offerProds.map((op) => [String(op.id), op]));
 
-  return records.map((record) => {
-    const p = prodMap.get(record.productId);
-    const op = offerMap.get(record.productId);
+  const uniqueMap = new Map<string, ProductStock>();
+
+  for (const record of records) {
+    const pid = String(record.productId);
+    if (uniqueMap.has(pid)) continue;
+
+    const p = prodMap.get(pid);
+    const op = offerMap.get(pid);
     const name = p?.name || op?.name || record.productName || record.productId;
     const cat = p?.category || record.productCategory || (op ? 'accessory' : (record.productId.includes('acc') ? 'accessory' : 'iphone-used'));
     
-    // Priority for image: 1. Product's actual images[0], 2. OfferProduct's image, 3. record.productImage, 4. fallback placeholder
     const pImg = p?.images && p.images.length > 0 ? p.images[0] : null;
     const image = pImg || op?.image || record.productImage || '/images/placeholder-iphone.svg';
 
     const price = p?.price || record.productPrice || 0;
     const storage = p?.storage || record.productStorage || (cat === 'accessory' ? 'N/A' : '128GB');
-    const currentStock = Math.max(0, record.stock ?? 0);
+    const currentStock = Math.max(0, record.stock ?? (p as any)?.stock ?? 10);
 
-    return {
+    uniqueMap.set(pid, {
       ...record,
+      storeId: 'global',
       stock: currentStock,
       status: calculateStockStatus(currentStock),
       productName: name,
@@ -164,11 +158,38 @@ function enrichStockRecords(records: ProductStock[]): ProductStock[] {
       productImage: image,
       productPrice: price,
       productStorage: storage,
-    };
-  });
+    });
+  }
+
+  return Array.from(uniqueMap.values());
 }
 
 export const StockService = {
+  getStockListSync(filters?: StockFilterOptions): ProductStock[] {
+    const local = getLocalStockRecords();
+    let enriched = enrichStockRecords(local);
+
+    if (filters?.storeId && filters.storeId !== 'ALL' && filters.storeId !== 'all') {
+      enriched = enriched.filter((r) => r.storeId === filters.storeId || r.storeId === 'ALL' || r.storeId === 'global');
+    }
+    if (filters?.status && filters.status !== 'ALL') {
+      enriched = enriched.filter((r) => r.status === filters.status);
+    }
+    if (filters?.category && filters.category !== 'ALL') {
+      enriched = enriched.filter((r) => r.productCategory === filters.category);
+    }
+    if (filters?.search?.trim()) {
+      const q = filters.search.toLowerCase();
+      enriched = enriched.filter(
+        (r) =>
+          r.productName?.toLowerCase().includes(q) ||
+          r.productStorage?.toLowerCase().includes(q) ||
+          r.productId?.toLowerCase().includes(q)
+      );
+    }
+    return enriched;
+  },
+
   async getStockList(filters?: StockFilterOptions): Promise<ProductStock[]> {
     let records: ProductStock[] = [];
 
@@ -189,7 +210,7 @@ export const StockService = {
 
       const queryStr = params.toString();
       const endpoint = queryStr ? `/stock?${queryStr}` : '/stock';
-      const apiResult = await fetchFromAPI<ProductStock[]>(endpoint);
+      const apiResult = await fetchFromAPI<ProductStock[]>(endpoint, { timeoutMs: 1500 });
       if (apiResult && Array.isArray(apiResult) && apiResult.length > 0) {
         records = apiResult;
         if (!filters?.storeId || filters.storeId === 'ALL' || filters.storeId === 'all') {
@@ -230,22 +251,28 @@ export const StockService = {
   async getStockForProduct(productId: string, storeId?: string): Promise<number> {
     const isAll = !storeId || storeId === 'ALL' || storeId === 'all';
     const list = await this.getStockList(isAll ? undefined : { storeId });
-    const productRecords = list.filter((s) => s.productId === productId);
+    const pidStr = String(productId);
+    const productRecords = list.filter((s) => String(s.productId) === pidStr);
 
     if (isAll) {
       if (productRecords.length > 0) {
         return productRecords.reduce((sum, item) => sum + Math.max(0, item.stock || 0), 0);
       }
-      const allLocal = getLocalStockRecords().filter((s) => s.productId === productId);
-      return allLocal.reduce((sum, item) => sum + Math.max(0, item.stock || 0), 0);
+      const allLocal = getLocalStockRecords().filter((s) => String(s.productId) === pidStr);
+      if (allLocal.length > 0) {
+        return allLocal.reduce((sum, item) => sum + Math.max(0, item.stock || 0), 0);
+      }
+      return 10;
     }
 
-    const match = productRecords.find((s) => s.storeId === storeId);
+    const match = productRecords.find((s) => s.storeId === storeId) || productRecords.find((s) => s.storeId === 'global' || !s.storeId);
     if (match) return match.stock;
 
     const allList = getLocalStockRecords();
-    const fallbackMatch = allList.find((s) => s.productId === productId && s.storeId === storeId);
-    return fallbackMatch ? fallbackMatch.stock : 0;
+    const fallbackMatch = allList.find((s) => String(s.productId) === pidStr && (s.storeId === storeId || s.storeId === 'global' || !s.storeId));
+    if (fallbackMatch) return fallbackMatch.stock;
+
+    return 10;
   },
 
   async getProductStockBreakdown(productId: string): Promise<ProductStock[]> {

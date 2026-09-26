@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { BRAND_CONFIG } from '../../services/config';
 import { getGeneralWhatsAppLink } from '../../utils/whatsapp';
+import { useSettings } from '../../context/SettingsContext';
 import { Button } from '../../components/common/Button';
 import { Toast } from '../../components/common/Toast';
 import { Phone, Mail, MapPin, Send, Clock } from 'lucide-react';
+import { SEO } from '../../components/common/SEO';
+import { generateLocalBusinessSchemas, generateBreadcrumbSchema } from '../../utils/seo';
 
 export const ContactPage: React.FC = () => {
+  const { settings } = useSettings();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
@@ -19,8 +23,21 @@ export const ContactPage: React.FC = () => {
     setMessage('');
   };
 
+  const contactJsonLd = [
+    ...generateLocalBusinessSchemas(),
+    generateBreadcrumbSchema([
+      { name: 'Home', url: '/' },
+      { name: 'Contact Us', url: '/contact' },
+    ]),
+  ];
+
   return (
     <div className="pt-32 pb-24 max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 space-y-12">
+      <SEO
+        title="Contact M Store Kerala | Showrooms & Support"
+        description="Contact M Store Kerala for iPhone price inquiries, stock updates, trade-in quotes, and showroom directions across Kootanad, Kecheri, Mattom and Pattambi."
+        jsonLd={contactJsonLd}
+      />
       {toastMsg && <Toast message={toastMsg} onClose={() => setToastMsg('')} />}
 
       {/* Header */}
@@ -52,22 +69,22 @@ export const ContactPage: React.FC = () => {
             
             <div className="flex items-center gap-3 text-zinc-700">
               <Phone className="w-4 h-4 text-[#E50914] shrink-0" />
-              <span>{BRAND_CONFIG.phone}</span>
+              <a href={`tel:${(settings.phone || '').replace(/\s+/g, '')}`} className="hover:underline font-medium">{settings.phone}</a>
             </div>
 
             <div className="flex items-center gap-3 text-zinc-700">
               <Mail className="w-4 h-4 text-blue-600 shrink-0" />
-              <span>{BRAND_CONFIG.email}</span>
+              <a href={`mailto:${settings.email}`} className="hover:underline font-medium">{settings.email}</a>
             </div>
 
             <div className="flex items-center gap-3 text-zinc-700">
               <Clock className="w-4 h-4 text-amber-500 shrink-0" />
-              <span>10:00 AM - 9:00 PM (Open All Days)</span>
+              <span>{settings.workingHours}</span>
             </div>
 
             <div className="flex items-start gap-3 text-zinc-700 pt-3 border-t border-zinc-100">
               <MapPin className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-              <span>Showrooms: Kootanad, Kecheri, Mattom (Kerala)</span>
+              <span>Showroom Head Office: {settings.address}</span>
             </div>
           </div>
         </div>

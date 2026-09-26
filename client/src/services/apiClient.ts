@@ -5,7 +5,7 @@ export async function fetchFromAPI<T>(
   endpoint: string,
   options?: RequestInit & { timeoutMs?: number }
 ): Promise<T | null> {
-  const timeoutMs = options?.timeoutMs || 12000;
+  const timeoutMs = options?.timeoutMs || 2000;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 

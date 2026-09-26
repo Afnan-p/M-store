@@ -8,22 +8,22 @@ export const WhyChooseUs: React.FC = () => {
 
   const promiseItems = [
     {
-      icon: <ShieldCheck className="w-5 h-5 text-zinc-900" />,
+      icon: <ShieldCheck className="w-5 h-5 text-[#E50914]" />,
       title: 'Verified Devices',
       subtitle: '50+ point check',
     },
     {
-      icon: <Coins className="w-5 h-5 text-zinc-900" />,
+      icon: <Coins className="w-5 h-5 text-[#E50914]" />,
       title: 'Best Value',
       subtitle: 'Fair & transparent pricing',
     },
     {
-      icon: <Headphones className="w-5 h-5 text-zinc-900" />,
+      icon: <Headphones className="w-5 h-5 text-[#E50914]" />,
       title: 'Expert Support',
       subtitle: 'Real people, real help',
     },
     {
-      icon: <MapPin className="w-5 h-5 text-zinc-900" />,
+      icon: <MapPin className="w-5 h-5 text-[#E50914]" />,
       title: 'Kerala Based',
       subtitle: 'Showrooms near you',
     },
@@ -58,10 +58,10 @@ export const WhyChooseUs: React.FC = () => {
                 <div className="pt-2">
                   <Link
                     to="/about"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-zinc-900 font-semibold text-xs border border-zinc-200/90 shadow-xs hover:bg-zinc-50 hover:shadow-md transition-all"
+                    className="inline-flex items-center justify-center gap-2.5 px-6 sm:px-7 py-3 sm:py-3.5 rounded-full bg-zinc-950 hover:bg-black text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 border border-zinc-800 group"
                   >
                     <span>Learn More</span>
-                    <ArrowRight className="w-3.5 h-3.5 text-zinc-800" />
+                    <ArrowRight className="w-4 h-4 text-white group-hover:translate-x-0.5 transition-transform" />
                   </Link>
                 </div>
               </div>
@@ -74,7 +74,7 @@ export const WhyChooseUs: React.FC = () => {
                     className="flex items-center gap-3.5 group apple-reveal-item"
                     style={{ transitionDelay: `${120 + idx * 80}ms` }}
                   >
-                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white border border-zinc-200/80 shadow-xs flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105">
+                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#E50914]/10 border border-[#E50914]/20 shadow-xs flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105">
                       {item.icon}
                     </div>
                     <div className="flex flex-col text-left">
@@ -95,7 +95,7 @@ export const WhyChooseUs: React.FC = () => {
             <div className="lg:col-span-5 h-full flex items-center justify-center apple-reveal-card" style={{ transitionDelay: '200ms' }}>
               <div className="relative w-full h-[280px] sm:h-[340px] lg:h-[380px] rounded-2xl sm:rounded-3xl overflow-hidden border border-zinc-200/60 shadow-md">
                 <img
-                  src="/images/promise-showroom.png"
+                  src="/images/promise-showroom.jpg"
                   alt="M Store Showroom Kerala"
                   className="w-full h-full object-cover object-center"
                 />

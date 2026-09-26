@@ -11,6 +11,7 @@ interface ProductGridProps {
   mobileHorizontalScroll?: boolean;
   animated?: boolean;
   containerRef?: React.RefObject<HTMLDivElement | null>;
+  row2Ref?: React.RefObject<HTMLDivElement | null>;
 }
 
 export const ProductGrid: React.FC<ProductGridProps> = ({
@@ -21,6 +22,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   mobileHorizontalScroll = false,
   animated = false,
   containerRef,
+  row2Ref,
 }) => {
   if (loading) {
     return (
@@ -53,20 +55,60 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   }
 
   if (mobileHorizontalScroll) {
+    const row1 = products.filter((_, idx) => idx % 2 === 0);
+    const row2 = products.filter((_, idx) => idx % 2 === 1);
+
     return (
-      <div
-        ref={containerRef}
-        className="grid grid-rows-2 grid-flow-col auto-cols-[calc(50%-6px)] sm:auto-cols-[calc(33.333%-10px)] gap-2.5 sm:gap-4 overflow-x-auto pb-4 pt-1 snap-x snap-mandatory scroll-smooth scrollbar-none [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid-cols-3 lg:grid-cols-4 md:grid-rows-none md:grid-flow-row md:auto-cols-auto md:overflow-visible md:pb-0 md:gap-6 items-stretch w-full"
-      >
-        {products.map((product, idx) => (
+      <div className="w-full">
+        {/* Desktop View (md and up): Standard grid */}
+        <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch w-full">
+          {products.map((product, idx) => (
+            <div
+              key={product.id}
+              className={`h-full flex flex-col ${animated ? 'apple-reveal-card' : ''}`}
+              style={animated ? { transitionDelay: `${100 + idx * 80}ms` } : undefined}
+            >
+              <ProductCard product={product} />
+            </div>
+          ))}
+        </div>
+
+        {/* Mobile View (< md): 2 Independent Scrollable Rows */}
+        <div className="block md:hidden space-y-3 w-full">
+          {/* Row 1 - Independent Horizontal Scroll */}
           <div
-            key={product.id}
-            className={`snap-start h-full flex flex-col ${animated ? 'apple-reveal-card' : ''}`}
-            style={animated ? { transitionDelay: `${100 + idx * 80}ms` } : undefined}
+            ref={containerRef}
+            className="flex gap-2.5 overflow-x-auto pb-1 pt-1 snap-x snap-mandatory scroll-smooth scrollbar-none [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden w-full"
           >
-            <ProductCard product={product} />
+            {row1.map((product, idx) => (
+              <div
+                key={product.id}
+                className={`snap-start w-[calc(50%-5px)] shrink-0 flex flex-col ${animated ? 'apple-reveal-card' : ''}`}
+                style={animated ? { transitionDelay: `${100 + idx * 80}ms` } : undefined}
+              >
+                <ProductCard product={product} />
+              </div>
+            ))}
           </div>
-        ))}
+
+          {/* Row 2 - Independent Horizontal Scroll */}
+          {row2.length > 0 && (
+            <div
+              ref={row2Ref}
+              className="flex gap-2.5 overflow-x-auto pb-2 pt-1 snap-x snap-mandatory scroll-smooth scrollbar-none [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden w-full"
+            >
+              {row2.map((product, idx) => (
+                <div
+                  key={product.id}
+                  className={`snap-start w-[calc(50%-5px)] shrink-0 flex flex-col ${animated ? 'apple-reveal-card' : ''}`}
+                  style={animated ? { transitionDelay: `${100 + idx * 80}ms` } : undefined}
+                >
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     );
   }

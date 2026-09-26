@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Store = require('../models/Store');
 const { protect, adminOnly } = require('../middleware/auth');
 
@@ -110,7 +111,13 @@ router.put('/:id', protect, adminOnly, async (req, res) => {
 // DELETE /api/stores/:id - Delete store (Admin Only)
 router.delete('/:id', protect, adminOnly, async (req, res) => {
   try {
-    await Store.findOneAndDelete({ id: req.params.id });
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(req.params.id);
+    await Store.findOneAndDelete({
+      $or: [
+        { id: req.params.id },
+        ...(isValidObjectId ? [{ _id: req.params.id }] : []),
+      ],
+    });
     return res.json({ message: 'Store deleted successfully' });
   } catch (err) {
     return res.status(500).json({ message: err.message });
@@ -118,3 +125,4 @@ router.delete('/:id', protect, adminOnly, async (req, res) => {
 });
 
 module.exports = router;
+

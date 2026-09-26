@@ -26,9 +26,9 @@ import {
 
 export const AdminDashboard: React.FC = () => {
   useProducts();
-  const { stores } = useStore();
-  const [stockRecords, setStockRecords] = useState<ProductStock[]>([]);
-  const [stockLoading, setStockLoading] = useState(true);
+  const { stores, isMultiStoreEnabled } = useStore();
+  const [stockRecords, setStockRecords] = useState<ProductStock[]>(() => StockService.getStockListSync());
+  const [stockLoading, setStockLoading] = useState<boolean>(() => StockService.getStockListSync().length === 0);
   const [selectedStore, setSelectedStore] = useState<string>('ALL');
   const [toastMsg, setToastMsg] = useState<string>('');
 
@@ -66,13 +66,24 @@ export const AdminDashboard: React.FC = () => {
 
   const loading = stockLoading;
 
-  // Filter stock records by selected showroom store scope
-  const activeStockRecords =
-    selectedStore === 'ALL'
-      ? stockRecords
-      : stockRecords.filter((s) => s.storeId === selectedStore);
+  const activeStoreObj = stores.find((s) => s.id === selectedStore);
+  const activeStoreName = selectedStore === 'ALL' ? 'All Showrooms' : (activeStoreObj?.name || selectedStore);
 
-  // Compute metrics based on selected store scope
+  const scopedStockRecords = selectedStore === 'ALL'
+    ? stockRecords
+    : stockRecords.filter((s) => s.storeId === selectedStore);
+
+  // Deduplicate stock records per product ID for selected store view
+  const activeStockRecordsMap = new Map<string, ProductStock>();
+  for (const s of scopedStockRecords) {
+    const pid = String(s.productId);
+    if (!activeStockRecordsMap.has(pid)) {
+      activeStockRecordsMap.set(pid, s);
+    }
+  }
+  const activeStockRecords = Array.from(activeStockRecordsMap.values());
+
+  // Compute metrics based on selected scope
   const totalProducts = activeStockRecords.length;
   const availableProducts = activeStockRecords.filter((s) => s.stock > 0).length;
   const soldProducts = activeStockRecords.filter((s) => s.stock === 0).length;
@@ -87,20 +98,20 @@ export const AdminDashboard: React.FC = () => {
     (s) => s.productCategory === 'accessory' && s.stock > 0
   ).length;
 
-  const activeStoreName =
-    selectedStore === 'ALL'
-      ? 'All 4 Showrooms (Grand Total)'
-      : stores.find((s) => s.id === selectedStore)?.name || 'Selected Showroom';
-
   return (
     <AdminLayout
-      title="Inventory & Store Operations"
-      subtitle="Real-time stock metrics, showroom inventory breakdown, pre-owned & new iPhone arrivals, and accessories."
+      title="Inventory & Stock Operations"
+      subtitle="Real-time stock metrics, device inventory arrivals, and accessories."
       action={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link to="/mstore-management-portal/stores">
+            <Button size="sm" variant="secondary" icon={<StoreIcon className="w-4 h-4 text-[#E50914]" />}>
+              Manage Showrooms
+            </Button>
+          </Link>
           <Link to="/mstore-management-portal/products/new?type=iphone">
             <Button size="sm" variant="primary" icon={<Plus className="w-4 h-4" />}>
-              Add iPhone
+              Add Phone / Device
             </Button>
           </Link>
           <Link to="/mstore-management-portal/products/new?type=accessory">
@@ -118,74 +129,76 @@ export const AdminDashboard: React.FC = () => {
     >
       {toastMsg && <Toast message={toastMsg} onClose={() => setToastMsg('')} />}
 
-      {/* Showroom Store Selector Bar */}
-      <div className="bg-white border border-zinc-200 p-4 rounded-2xl shadow-sm space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <StoreIcon className="w-5 h-5 text-[#E50914]" />
-            <h3 className="text-sm font-bold text-zinc-900">Showroom Inventory Scope</h3>
-            <span className="text-xs bg-zinc-100 text-zinc-600 px-2.5 py-0.5 rounded-full font-semibold">
-              {activeStoreName}
-            </span>
-          </div>
+      {/* Showroom Store Selector Bar (Rendered only when Multi-Store Mode is enabled) */}
+      {isMultiStoreEnabled && (
+        <div className="bg-white border border-zinc-200 p-4 rounded-2xl shadow-sm space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <StoreIcon className="w-5 h-5 text-[#E50914]" />
+              <h3 className="text-sm font-bold text-zinc-900">Showroom Inventory Scope</h3>
+              <span className="text-xs bg-zinc-100 text-zinc-600 px-2.5 py-0.5 rounded-full font-semibold">
+                {activeStoreName}
+              </span>
+            </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-            {/* Grand Total All Showrooms Button */}
-            <button
-              onClick={() => setSelectedStore('ALL')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
-                selectedStore === 'ALL'
-                  ? 'bg-zinc-900 text-white shadow-sm ring-2 ring-zinc-950/20'
-                  : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-              }`}
-            >
-              <span>All Showrooms</span>
-              <span
-                className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                  selectedStore === 'ALL' ? 'bg-white/20 text-white' : 'bg-zinc-200 text-zinc-800'
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+              {/* Grand Total All Showrooms Button */}
+              <button
+                onClick={() => setSelectedStore('ALL')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                  selectedStore === 'ALL'
+                    ? 'bg-zinc-900 text-white shadow-sm ring-2 ring-zinc-950/20'
+                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
                 }`}
               >
-                {stockRecords.length}
-              </span>
-            </button>
-
-            {/* Individual Store Scope Buttons */}
-            {stores.map((s) => {
-              const storeRecordCount = stockRecords.filter((sr) => sr.storeId === s.id).length;
-              const isSelected = selectedStore === s.id;
-
-              return (
-                <button
-                  key={s.id}
-                  onClick={() => setSelectedStore(s.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
-                    isSelected
-                      ? 'bg-[#E50914] text-white shadow-sm ring-2 ring-[#E50914]/20'
-                      : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                <span>All Showrooms</span>
+                <span
+                  className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                    selectedStore === 'ALL' ? 'bg-white/20 text-white' : 'bg-zinc-200 text-zinc-800'
                   }`}
                 >
-                  <MapPin className="w-3 h-3" />
-                  <span>{s.name.replace('Store ', 'S')}</span>
-                  <span
-                    className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                      isSelected ? 'bg-white/20 text-white' : 'bg-zinc-200 text-zinc-700'
+                  {stockRecords.length}
+                </span>
+              </button>
+
+              {/* Individual Store Scope Buttons */}
+              {stores.map((s) => {
+                const storeRecordCount = stockRecords.filter((sr) => sr.storeId === s.id).length;
+                const isSelected = selectedStore === s.id;
+
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => setSelectedStore(s.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                      isSelected
+                        ? 'bg-[#E50914] text-white shadow-sm ring-2 ring-[#E50914]/20'
+                        : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
                     }`}
                   >
-                    {storeRecordCount}
-                  </span>
-                </button>
-              );
-            })}
+                    <MapPin className="w-3 h-3" />
+                    <span>{s.name.replace('Store ', 'S')}</span>
+                    <span
+                      className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                        isSelected ? 'bg-white/20 text-white' : 'bg-zinc-200 text-zinc-700'
+                      }`}
+                    >
+                      {storeRecordCount}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Stats Cards Grid - 6 Dynamic Metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <StatsCard
           title="Total Listed"
           value={totalProducts}
-          subtitle={selectedStore === 'ALL' ? 'Grand total across 4 showrooms' : 'Items in this showroom'}
+          subtitle={!isMultiStoreEnabled || selectedStore === 'ALL' ? 'Grand total stock items' : 'Items in this showroom'}
           icon={<Package className="w-4 h-4 text-zinc-900" />}
         />
         <StatsCard
@@ -221,70 +234,72 @@ export const AdminDashboard: React.FC = () => {
         />
       </div>
 
-      {/* Store Inventory Cards Section */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#E50914]" />
-            <h3 className="text-sm font-bold text-zinc-900">Physical Store Inventory Status</h3>
+      {/* Physical Store Inventory Cards Section (Rendered only when Multi-Store Mode is enabled) */}
+      {isMultiStoreEnabled && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#E50914]" />
+              <h3 className="text-sm font-bold text-zinc-900">Physical Store Inventory Status</h3>
+            </div>
+            <Link to="/mstore-management-portal/stock" className="text-xs text-[#E50914] font-semibold hover:underline">
+              Manage Products Stock →
+            </Link>
           </div>
-          <Link to="/mstore-management-portal/stock" className="text-xs text-[#E50914] font-semibold hover:underline">
-            Manage Products Stock →
-          </Link>
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {stores.map((s) => {
-            const storeRecords = stockRecords.filter((sr) => sr.storeId === s.id);
-            const inStockStoreRecords = storeRecords.filter((sr) => sr.stock > 0);
-            
-            const storeNew = inStockStoreRecords.filter((sr) => sr.productCategory === 'iphone-new').length;
-            const storeUsed = inStockStoreRecords.filter((sr) => sr.productCategory === 'iphone-used').length;
-            const storeAcc = inStockStoreRecords.filter((sr) => sr.productCategory === 'accessory').length;
-            const isSelected = selectedStore === s.id;
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {stores.map((s) => {
+              const storeRecords = stockRecords.filter((sr) => sr.storeId === s.id);
+              const inStockStoreRecords = storeRecords.filter((sr) => sr.stock > 0);
+              
+              const storeNew = inStockStoreRecords.filter((sr) => sr.productCategory === 'iphone-new').length;
+              const storeUsed = inStockStoreRecords.filter((sr) => sr.productCategory === 'iphone-used').length;
+              const storeAcc = inStockStoreRecords.filter((sr) => sr.productCategory === 'accessory').length;
+              const isSelected = selectedStore === s.id;
 
-            return (
-              <div
-                key={s.id}
-                onClick={() => setSelectedStore(s.id)}
-                className={`bg-white border rounded-2xl p-4 cursor-pointer transition-all hover:shadow-md ${
-                  isSelected
-                    ? 'border-[#E50914] ring-2 ring-[#E50914]/20 shadow-sm'
-                    : 'border-zinc-200 hover:border-zinc-300'
-                }`}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h4 className="font-bold text-zinc-900 text-sm flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-[#E50914]" />
-                      {s.name}
-                    </h4>
-                    <p className="text-[11px] text-zinc-500 line-clamp-1">{s.location}</p>
+              return (
+                <div
+                  key={s.id}
+                  onClick={() => setSelectedStore(s.id)}
+                  className={`bg-white border rounded-2xl p-4 cursor-pointer transition-all hover:shadow-md ${
+                    isSelected
+                      ? 'border-[#E50914] ring-2 ring-[#E50914]/20 shadow-sm'
+                      : 'border-zinc-200 hover:border-zinc-300'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h4 className="font-bold text-zinc-900 text-sm flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-[#E50914]" />
+                        {s.name}
+                      </h4>
+                      <p className="text-[11px] text-zinc-500 line-clamp-1">{s.location}</p>
+                    </div>
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-zinc-100 text-zinc-800 border border-zinc-200 whitespace-nowrap">
+                      {inStockStoreRecords.length} / {storeRecords.length} Available
+                    </span>
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-zinc-100 text-zinc-800 border border-zinc-200 whitespace-nowrap">
-                    {inStockStoreRecords.length} / {storeRecords.length} Available
-                  </span>
-                </div>
 
-                <div className="grid grid-cols-3 gap-1.5 bg-zinc-50 p-2 rounded-xl text-center border border-zinc-100">
-                  <div>
-                    <div className="text-xs font-bold text-blue-600">{storeNew}</div>
-                    <div className="text-[9px] text-zinc-500 font-medium">New</div>
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-[#E50914]">{storeUsed}</div>
-                    <div className="text-[9px] text-zinc-500 font-medium">Pre-Owned</div>
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-purple-600">{storeAcc}</div>
-                    <div className="text-[9px] text-zinc-500 font-medium">Accessories</div>
+                  <div className="grid grid-cols-3 gap-1.5 bg-zinc-50 p-2 rounded-xl text-center border border-zinc-100">
+                    <div>
+                      <div className="text-xs font-bold text-blue-600">{storeNew}</div>
+                      <div className="text-[9px] text-zinc-500 font-medium">New</div>
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-[#E50914]">{storeUsed}</div>
+                      <div className="text-[9px] text-zinc-500 font-medium">Pre-Owned</div>
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-purple-600">{storeAcc}</div>
+                      <div className="text-[9px] text-zinc-500 font-medium">Accessories</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Recent / Filtered Inventory Table */}
       <div className="bg-white border border-zinc-200 rounded-2xl p-6 space-y-4 shadow-sm">
@@ -294,7 +309,7 @@ export const AdminDashboard: React.FC = () => {
               Inventory Breakdown ({activeStockRecords.length})
             </h3>
             <p className="text-xs text-zinc-500">
-              Showing stock records for <strong className="text-zinc-800">{activeStoreName}</strong>
+              Showing stock records across total product inventory
             </p>
           </div>
           <Link
@@ -311,7 +326,7 @@ export const AdminDashboard: React.FC = () => {
             <thead className="bg-zinc-50 text-zinc-600 uppercase tracking-wider font-semibold border-b border-zinc-200">
               <tr>
                 <th className="p-3">Device / Item</th>
-                <th className="p-3">Showroom Store</th>
+                {isMultiStoreEnabled && <th className="p-3">Showroom Store</th>}
                 <th className="p-3">Category</th>
                 <th className="p-3">Price</th>
                 <th className="p-3">Stock Units</th>
@@ -321,14 +336,14 @@ export const AdminDashboard: React.FC = () => {
             <tbody className="divide-y divide-zinc-200 text-zinc-700">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-zinc-500">
+                  <td colSpan={isMultiStoreEnabled ? 6 : 5} className="py-8 text-center text-zinc-500">
                     Loading inventory data...
                   </td>
                 </tr>
               ) : activeStockRecords.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-zinc-500">
-                    No stock records found for {activeStoreName}.
+                  <td colSpan={isMultiStoreEnabled ? 6 : 5} className="py-8 text-center text-zinc-500">
+                    No stock records found.
                   </td>
                 </tr>
               ) : (
@@ -358,12 +373,14 @@ export const AdminDashboard: React.FC = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="p-3">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-zinc-100 text-zinc-800 border border-zinc-200">
-                          <StoreIcon className="w-3 h-3 text-[#E50914]" />
-                          {storeName}
-                        </span>
-                      </td>
+                      {isMultiStoreEnabled && (
+                        <td className="p-3">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-zinc-100 text-zinc-800 border border-zinc-200">
+                            <StoreIcon className="w-3 h-3 text-[#E50914]" />
+                            {storeName}
+                          </span>
+                        </td>
+                      )}
                       <td className="p-3">
                         {record.productCategory === 'iphone-used' && <Badge variant="used">Pre-Owned</Badge>}
                         {record.productCategory === 'iphone-new' && <Badge variant="new">Brand New</Badge>}

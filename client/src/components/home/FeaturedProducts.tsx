@@ -5,6 +5,7 @@ import { ProductGrid } from '../product/ProductGrid';
 import { useStore } from '../../context/StoreContext';
 import { ArrowRight, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
+import { isNonIPhoneDevice, isIPhoneNewProduct, isIPhoneUsedProduct, isIPhoneProduct } from '../../utils/categoryUtils';
 
 interface FeaturedProductsProps {
   products: Product[];
@@ -15,12 +16,23 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, lo
   const { ref, isVisible } = useScrollReveal<HTMLElement>({ threshold: 0.08 });
   const { activeStoreId, activeStore } = useStore();
   const [activeTab, setActiveTab] = React.useState<'all' | 'new' | 'used' | 'accessory'>('all');
+  const [showRightArrow, setShowRightArrow] = React.useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const row2ScrollRef = useRef<HTMLDivElement>(null);
+
+  const checkScroll = () => {
+    if (!scrollContainerRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+    setShowRightArrow(scrollWidth > clientWidth + 5 && scrollLeft < scrollWidth - clientWidth - 10);
+  };
 
   const handleScroll = (direction: 'left' | 'right') => {
+    const scrollAmount = direction === 'left' ? -260 : 260;
     if (scrollContainerRef.current) {
-      const scrollAmount = direction === 'left' ? -260 : 260;
       scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+    if (row2ScrollRef.current) {
+      row2ScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }
   };
 
@@ -50,21 +62,37 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, lo
     return true;
   });
 
-  const hasFeaturedProducts = storeFilteredProducts.some((p) => p.featured === true);
+  const hasFeaturedProducts = storeFilteredProducts.some((p) => p.featured === true && p.category !== 'accessory');
 
-  const iphoneProducts = storeFilteredProducts.filter(
+  const featuredCollectionProducts = storeFilteredProducts.filter(
     (p) =>
-      (p.category === 'iphone-new' || p.category === 'iphone-used') &&
+      p.category !== 'accessory' &&
       (hasFeaturedProducts ? p.featured === true : true)
   );
 
-  const filtered = iphoneProducts
+  const filtered = featuredCollectionProducts
     .filter((p) => {
-      if (activeTab === 'new') return p.category === 'iphone-new';
-      if (activeTab === 'used') return p.category === 'iphone-used';
+      if (activeTab === 'new') return p.condition === 'Brand New' || p.category === 'iphone-new' || p.category === 'android-new';
+      if (activeTab === 'used') return p.condition !== 'Brand New' || p.category === 'iphone-used' || p.category === 'android-used';
+      if (activeTab === 'android') return isAndroidProduct(p);
       return true;
     })
     .slice(0, 8);
+
+  React.useEffect(() => {
+    checkScroll();
+    const el = scrollContainerRef.current;
+    if (el) {
+      el.addEventListener('scroll', checkScroll);
+      window.addEventListener('resize', checkScroll);
+    }
+    return () => {
+      if (el) {
+        el.removeEventListener('scroll', checkScroll);
+        window.removeEventListener('resize', checkScroll);
+      }
+    };
+  }, [filtered]);
 
   return (
     <section ref={ref} className="py-10 sm:py-14 lg:py-[54px] relative overflow-hidden bg-[#FAF9F6]">
@@ -80,7 +108,7 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, lo
             </span>
             <div className="flex items-center gap-2">
               <h2 className="font-ds-quilter text-3xl sm:text-4xl font-bold text-zinc-950 tracking-tight">
-                The Latest iPhones
+                Featured Collection
               </h2>
               {activeStore && (
                 <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#E50914] bg-red-50 px-2.5 py-0.5 rounded-full border border-red-200">
@@ -99,9 +127,10 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, lo
             {/* Filter Tabs Container */}
             <div className="flex items-center gap-1 bg-zinc-200/60 p-1 rounded-xl border border-zinc-200/90 text-xs font-semibold backdrop-blur-sm overflow-x-auto max-w-full scrollbar-none [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden shrink-0">
               {[
-                { key: 'all', label: 'All iPhones' },
+                { key: 'all', label: 'All Devices' },
                 { key: 'new', label: 'Brand New' },
                 { key: 'used', label: 'Pre-Owned' },
+                { key: 'android', label: 'Android' },
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -116,6 +145,19 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, lo
                 </button>
               ))}
             </div>
+
+            {/* Animated Scroll Indicator Pill */}
+            {showRightArrow && (
+              <button
+                type="button"
+                onClick={() => handleScroll('right')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 hover:bg-rose-100 border border-rose-200/90 text-[#E50914] text-[11px] sm:text-xs font-extrabold tracking-wide shadow-2xs transition-all shrink-0 cursor-pointer active:scale-95"
+                title="Scroll right for more items"
+              >
+                <span>Scroll</span>
+                <ArrowRight className="w-3.5 h-3.5 animate-bounce-x" />
+              </button>
+            )}
 
             {/* Scroll Control Arrows (< >) */}
             <div className="flex items-center gap-1.5 shrink-0">
@@ -159,6 +201,7 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, lo
           mobileHorizontalScroll={true}
           animated={true}
           containerRef={scrollContainerRef}
+          row2Ref={row2ScrollRef}
         />
       </div>
     </section>

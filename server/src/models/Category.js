@@ -15,14 +15,30 @@ const categorySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    image: {
+      type: String,
+      default: '/images/placeholder-iphone.svg',
+    },
+    link: {
+      type: String,
+      default: '',
+    },
     type: {
       type: String,
-      enum: ['iphone-new', 'iphone-used', 'accessory'],
-      required: true,
+      default: 'custom',
     },
     description: {
       type: String,
       default: '',
+    },
+    status: {
+      type: String,
+      enum: ['active', 'inactive'],
+      default: 'active',
+    },
+    displayOrder: {
+      type: Number,
+      default: 0,
     },
   },
   {
@@ -31,3 +47,4 @@ const categorySchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model('Category', categorySchema);
+

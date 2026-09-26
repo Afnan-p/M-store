@@ -3,6 +3,8 @@ import { useProducts } from '../../hooks/useProducts';
 import { useStore } from '../../context/StoreContext';
 import { ProductGrid } from '../../components/product/ProductGrid';
 import { Headphones, MapPin } from 'lucide-react';
+import { SEO } from '../../components/common/SEO';
+import { generateBreadcrumbSchema } from '../../utils/seo';
 
 export const AccessoriesPage: React.FC = () => {
   const { filteredProducts, loading, setFilters } = useProducts();
@@ -59,8 +61,18 @@ export const AccessoriesPage: React.FC = () => {
     });
   }, [allAccessories, selectedSubCategory]);
 
+  const accessoriesBreadcrumbs = generateBreadcrumbSchema([
+    { name: 'Home', url: '/' },
+    { name: 'Accessories', url: '/accessories' },
+  ]);
+
   return (
     <div className="pt-28 sm:pt-32 pb-24 max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 space-y-8 sm:space-y-12">
+      <SEO
+        title="Apple Accessories Kerala | Chargers, AirPods & Cases | M Store"
+        description="Buy original Apple accessories, 20W USB-C fast chargers, AirPods, MagSafe cases, and power adapters in Kerala at M Store showrooms."
+        jsonLd={accessoriesBreadcrumbs}
+      />
       {/* Accessories Banner */}
       <div className="space-y-4 text-center sm:text-left border-b border-zinc-200 pb-8">
         <div className="flex flex-wrap items-center gap-3">

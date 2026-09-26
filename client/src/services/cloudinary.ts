@@ -101,3 +101,40 @@ export async function uploadImageToCloudinary(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
+
+/**
+ * Transforms Cloudinary image URLs to use automatic format (WebP/AVIF) and quality optimization (f_auto,q_auto)
+ * with optional responsive width limits to reduce mobile image payload by up to 70%.
+ */
+export function getOptimizedImageUrl(
+  url: string | undefined | null,
+  options: { width?: number; height?: number; crop?: 'limit' | 'fill' | 'fit' } = {}
+): string {
+  if (!url || typeof url !== 'string') {
+    return '/images/placeholder-iphone.svg';
+  }
+
+  const trimmed = url.trim();
+  if (!trimmed) return '/images/placeholder-iphone.svg';
+
+  // If it's a Cloudinary URL, apply dynamic transformations
+  if (trimmed.includes('res.cloudinary.com') && trimmed.includes('/upload/')) {
+    // Avoid double transformation if already present
+    if (trimmed.includes('/f_auto,q_auto')) {
+      return trimmed;
+    }
+
+    const { width, height, crop = 'limit' } = options;
+    const transformParts: string[] = ['f_auto', 'q_auto'];
+
+    if (width) transformParts.push(`w_${width}`);
+    if (height) transformParts.push(`h_${height}`);
+    if (width || height) transformParts.push(`c_${crop}`);
+
+    const transformStr = transformParts.join(',');
+    return trimmed.replace('/upload/', `/upload/${transformStr}/`);
+  }
+
+  return trimmed;
+}
+

@@ -3,13 +3,18 @@ import { useProducts } from '../../hooks/useProducts';
 import { useStore } from '../../context/StoreContext';
 import { ProductGrid } from '../../components/product/ProductGrid';
 import { MapPin, Flame, Gift } from 'lucide-react';
+import { useSettings } from '../../context/SettingsContext';
 import { getGeneralWhatsAppLink } from '../../utils/whatsapp';
 import { Button } from '../../components/common/Button';
+import { SEO } from '../../components/common/SEO';
+import { generateBreadcrumbSchema } from '../../utils/seo';
+import { isIPhoneProduct, isAndroidProduct } from '../../utils/categoryUtils';
 
 export const OffersPage: React.FC = () => {
   const { products, loading } = useProducts();
   const { activeStoreId, stores, setActiveStoreId } = useStore();
-  const [selectedOfferCategory, setSelectedOfferCategory] = useState<'ALL' | 'IPHONE' | 'ACCESSORY'>('ALL');
+  const { settings } = useSettings();
+  const [selectedOfferCategory, setSelectedOfferCategory] = useState<'ALL' | 'IPHONE' | 'ANDROID' | 'ACCESSORY'>('ALL');
 
   // Base list of all active offer-enabled products matching active store selection
   const allStoreOfferProducts = products.filter((p) => {
@@ -25,26 +30,36 @@ export const OffersPage: React.FC = () => {
     return true;
   });
 
-  const iphoneOffersCount = allStoreOfferProducts.filter(
-    (p) => p.category === 'iphone-new' || p.category === 'iphone-used'
-  ).length;
+  const iphoneOffersCount = allStoreOfferProducts.filter((p) => isIPhoneProduct(p)).length;
 
-  const accessoryOffersCount = allStoreOfferProducts.filter(
-    (p) => p.category === 'accessory'
-  ).length;
+  const androidOffersCount = allStoreOfferProducts.filter((p) => isAndroidProduct(p)).length;
+
+  const accessoryOffersCount = allStoreOfferProducts.filter((p) => p.category === 'accessory').length;
 
   // Final filtered list based on active category tab
   const offerProducts = allStoreOfferProducts.filter((p) => {
     if (selectedOfferCategory === 'IPHONE') {
-      if (p.category !== 'iphone-new' && p.category !== 'iphone-used') return false;
+      return isIPhoneProduct(p);
+    } else if (selectedOfferCategory === 'ANDROID') {
+      return isAndroidProduct(p);
     } else if (selectedOfferCategory === 'ACCESSORY') {
-      if (p.category !== 'accessory') return false;
+      return p.category === 'accessory';
     }
     return true;
   });
 
+  const offersBreadcrumbs = generateBreadcrumbSchema([
+    { name: 'Home', url: '/' },
+    { name: 'Offers', url: '/offers' },
+  ]);
+
   return (
     <div className="pt-32 pb-24 max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 space-y-10">
+      <SEO
+        title="iPhone & Smartphone Offers & Best Deals Kerala | M Store"
+        description="Explore active iPhone & Android discounts, bundled accessory offers, and special festival deals at M Store Kerala. Save on new and certified pre-owned devices."
+        jsonLd={offersBreadcrumbs}
+      />
       {/* Premium Apple Promotional Hero Banner (/offers Page Top Banner) */}
       <div className="relative rounded-3xl border border-zinc-200/90 p-6 sm:p-10 lg:p-12 overflow-hidden shadow-xs min-h-[340px] sm:min-h-[380px] lg:min-h-[400px] flex items-center">
         {/* Full Seamless Background Image */}
@@ -67,25 +82,25 @@ export const OffersPage: React.FC = () => {
           </h1>
 
           <p className="text-xs sm:text-sm lg:text-base text-zinc-600 font-medium leading-relaxed max-w-md">
-            Handpicked device offers, verified pre-owned deals, and free genuine Apple accessories with select iPhones across our Kerala showrooms.
+            Handpicked device offers, verified pre-owned deals, and free genuine accessories with select devices across our Kerala showrooms.
           </p>
 
           <div className="pt-2 flex flex-wrap items-center gap-4">
             <a
               href={getGeneralWhatsAppLink(
-                'Hi M Store, I would like to inquire about your current active promotional offer deals.'
+                'Hi M Store, I would like to inquire about your current active promotional offer deals.',
+                settings.whatsappNumber
               )}
               target="_blank"
               rel="noopener noreferrer"
             >
-              <Button
-                size="md"
-                variant="whatsapp"
-                icon={<Gift className="w-4 h-4 text-white" />}
-                className="px-6 shadow-md shadow-emerald-600/20"
+              <button
+                type="button"
+                className="inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-xl bg-white hover:bg-zinc-50 text-emerald-600 font-extrabold text-xs sm:text-sm border border-emerald-500/30 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group cursor-pointer"
               >
-                Inquire Active Offers
-              </Button>
+                <Gift className="w-4.5 h-4.5 text-emerald-600 group-hover:scale-110 transition-transform" />
+                <span>Inquire Active Offers</span>
+              </button>
             </a>
           </div>
         </div>
@@ -113,6 +128,16 @@ export const OffersPage: React.FC = () => {
             }`}
           >
             iPhone Offers ({iphoneOffersCount})
+          </button>
+          <button
+            onClick={() => setSelectedOfferCategory('ANDROID')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+              selectedOfferCategory === 'ANDROID'
+                ? 'bg-zinc-900 text-white shadow-md'
+                : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+            }`}
+          >
+            Android Offers ({androidOffersCount})
           </button>
           <button
             onClick={() => setSelectedOfferCategory('ACCESSORY')}

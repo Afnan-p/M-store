@@ -3,6 +3,7 @@ import { useSegments } from '../../hooks/useSegments';
 import { SegmentService } from '../../services/segments';
 import type { IPhoneSegment, SegmentCategoryType } from '../../types/product';
 import { AdminLayout } from '../../components/admin/AdminLayout';
+import { uploadImageToCloudinary } from '../../services/cloudinary';
 import {
   Plus,
   ArrowUp,
@@ -11,12 +12,29 @@ import {
   Trash2,
   CheckCircle,
   XCircle,
+  Upload,
 } from 'lucide-react';
 
 export const AdminSegments: React.FC = () => {
   const { segments, loading, refreshSegments } = useSegments();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSegment, setEditingSegment] = useState<IPhoneSegment | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const handleImageFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploadingImage(true);
+      const url = await uploadImageToCloudinary(file);
+      setThumbnail(url);
+    } catch (err) {
+      console.error('Failed to upload segment image:', err);
+      alert('Could not upload image file. Please try again.');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   // Form State
   const [name, setName] = useState('');
@@ -282,9 +300,22 @@ export const AdminSegments: React.FC = () => {
                 />
               </div>
 
-              {/* Thumbnail Image URL */}
+              {/* Thumbnail Image URL & File Upload */}
               <div className="space-y-1.5">
-                <label className="font-semibold text-zinc-700">Thumbnail Image URL</label>
+                <div className="flex items-center justify-between">
+                  <label className="font-semibold text-zinc-700">Thumbnail Image URL</label>
+                  <label className="cursor-pointer text-[11px] font-bold text-[#E50914] hover:underline flex items-center gap-1">
+                    <Upload className="w-3 h-3" />
+                    <span>{uploadingImage ? 'Uploading...' : 'Upload Image'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageFileUpload}
+                      disabled={uploadingImage}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
                 <div className="flex gap-2">
                   <input
                     type="text"

@@ -21,9 +21,9 @@ import {
 } from 'lucide-react';
 
 export const AdminStockPage: React.FC = () => {
-  const { stores } = useStore();
-  const [stockRecords, setStockRecords] = useState<ProductStock[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { stores, isMultiStoreEnabled } = useStore();
+  const [stockRecords, setStockRecords] = useState<ProductStock[]>(() => StockService.getStockListSync());
+  const [loading, setLoading] = useState<boolean>(() => StockService.getStockListSync().length === 0);
   const [toastMsg, setToastMsg] = useState('');
 
   // Filters
@@ -161,17 +161,19 @@ export const AdminStockPage: React.FC = () => {
 
           {/* Filters Group */}
           <div className="flex flex-wrap items-center gap-3">
-            {/* Store Filter */}
-            <CustomSelect
-              options={[
-                { value: 'ALL', label: 'All Stores' },
-                ...stores.map((s) => ({ value: s.id, label: s.name })),
-              ]}
-              value={selectedStoreFilter}
-              onChange={(val) => setSelectedStoreFilter(val)}
-              icon={<StoreIcon className="w-3.5 h-3.5 text-[#E50914]" />}
-              buttonClassName="bg-zinc-50 border-zinc-200 text-zinc-900 text-xs font-bold"
-            />
+            {/* Store Filter (Rendered when Multi-Store Mode is enabled) */}
+            {isMultiStoreEnabled && (
+              <CustomSelect
+                options={[
+                  { value: 'ALL', label: 'All Stores' },
+                  ...stores.map((s) => ({ value: s.id, label: s.name })),
+                ]}
+                value={selectedStoreFilter}
+                onChange={(val) => setSelectedStoreFilter(val)}
+                icon={<StoreIcon className="w-3.5 h-3.5 text-[#E50914]" />}
+                buttonClassName="bg-zinc-50 border-zinc-200 text-zinc-900 text-xs font-bold"
+              />
+            )}
 
             {/* Status Filter */}
             <CustomSelect
@@ -211,7 +213,6 @@ export const AdminStockPage: React.FC = () => {
             <thead>
               <tr className="bg-zinc-50 border-b border-zinc-200 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
                 <th className="p-4">Product Details</th>
-                <th className="p-4">Store Branch</th>
                 <th className="p-4">Current Stock</th>
                 <th className="p-4">Stock Status</th>
                 <th className="p-4">Last Updated</th>
@@ -221,23 +222,18 @@ export const AdminStockPage: React.FC = () => {
             <tbody className="divide-y divide-zinc-200 text-xs">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-zinc-500 font-semibold">
+                  <td colSpan={5} className="p-8 text-center text-zinc-500 font-semibold">
                     Loading stock records...
                   </td>
                 </tr>
               ) : filteredRecords.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-12 text-center text-zinc-500 font-semibold">
+                  <td colSpan={5} className="p-12 text-center text-zinc-500 font-semibold">
                     No stock records matching current filters.
                   </td>
                 </tr>
               ) : (
                 filteredRecords.map((record) => {
-                  const assignedStore = stores.find((s) => s.id === record.storeId);
-                  const storeName = record.storeId === 'ALL' || record.storeId === 'all'
-                    ? 'All Stores'
-                    : (assignedStore?.name || record.storeId);
-
                   const status = calculateStockStatus(record.stock);
 
                   return (
@@ -264,14 +260,6 @@ export const AdminStockPage: React.FC = () => {
                             </div>
                           </div>
                         </div>
-                      </td>
-
-                      {/* Store Branch Column */}
-                      <td className="p-4 whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-zinc-100 text-zinc-800 border border-zinc-200">
-                          <StoreIcon className="w-3 h-3 text-[#E50914]" />
-                          {storeName}
-                        </span>
                       </td>
 
                       {/* Current Stock Number */}

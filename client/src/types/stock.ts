@@ -41,5 +41,5 @@ export interface StockFilterOptions {
   search?: string;
   storeId?: string;
   status?: 'ALL' | 'In Stock' | 'Low Stock' | 'Out of Stock';
-  category?: 'ALL' | 'iphone-new' | 'iphone-used' | 'accessory';
+  category?: 'ALL' | 'iphone-new' | 'iphone-used' | 'android-new' | 'android-used' | 'accessory' | string;
 }

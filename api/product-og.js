@@ -23,7 +23,7 @@ function escapeHtml(str) {
 module.exports = async (req, res) => {
   const { slug, id } = req.query;
   const target = Array.isArray(slug) ? slug[0] : slug || (Array.isArray(id) ? id[0] : id) || '';
-  const siteUrl = 'https://m-store-two.vercel.app';
+  const siteUrl = process.env.VITE_SITE_URL || 'https://m-store-two.vercel.app';
   const defaultImage = `${siteUrl}/favicon.png`;
   const backendApiUrl = process.env.VITE_API_URL || 'https://m-store-backend.onrender.com/api';
 

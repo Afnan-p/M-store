@@ -11,6 +11,7 @@ import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
 import { Toast } from '../../components/common/Toast';
 import { CustomSelect } from '../../components/common/CustomSelect';
+import { isAndroidNewProduct, isAndroidUsedProduct, isIPhoneNewProduct, isIPhoneUsedProduct } from '../../utils/categoryUtils';
 import {
   Plus,
   Edit,
@@ -107,7 +108,17 @@ export const AdminProducts: React.FC = () => {
 
       // Category Filter
       if (selectedCategoryFilter !== 'ALL') {
-        if (p.category !== selectedCategoryFilter) return false;
+        if (selectedCategoryFilter === 'android-new') {
+          if (!isAndroidNewProduct(p) && p.category !== 'android-new') return false;
+        } else if (selectedCategoryFilter === 'android-used') {
+          if (!isAndroidUsedProduct(p) && p.category !== 'android-used' && p.category !== 'used-android') return false;
+        } else if (selectedCategoryFilter === 'iphone-new') {
+          if (!isIPhoneNewProduct(p) && p.category !== 'iphone-new') return false;
+        } else if (selectedCategoryFilter === 'iphone-used') {
+          if (!isIPhoneUsedProduct(p) && p.category !== 'iphone-used') return false;
+        } else if (p.category !== selectedCategoryFilter) {
+          return false;
+        }
       }
 
       // Real-Time Stock & Availability Status Filter
@@ -292,6 +303,8 @@ export const AdminProducts: React.FC = () => {
               { value: 'ALL', label: 'All Items' },
               { value: 'iphone-new', label: 'Brand New iPhones' },
               { value: 'iphone-used', label: 'Pre-Owned iPhones' },
+              { value: 'android-new', label: 'Brand New Android' },
+              { value: 'android-used', label: 'Pre-Owned Android' },
               { value: 'accessory', label: 'Accessories' },
             ]}
             value={selectedCategoryFilter}
@@ -448,10 +461,10 @@ export const AdminProducts: React.FC = () => {
                           : 'Recent'}
                       </td>
                       <td className="p-4">
-                        {product.category === 'iphone-used' && <Badge variant="used">Pre-Owned</Badge>}
-                        {product.category === 'iphone-new' && <Badge variant="new">Brand New</Badge>}
+                        {(product.category === 'iphone-used' || product.category === 'android-used') && <Badge variant="used">Pre-Owned</Badge>}
+                        {(product.category === 'iphone-new' || product.category === 'android-new') && <Badge variant="new">Brand New</Badge>}
                         {product.category === 'accessory' && <Badge variant="accessory">Accessory</Badge>}
-                        {product.category !== 'iphone-used' && product.category !== 'iphone-new' && product.category !== 'accessory' && (
+                        {product.category !== 'iphone-used' && product.category !== 'iphone-new' && product.category !== 'android-used' && product.category !== 'android-new' && product.category !== 'accessory' && (
                           <Badge variant="secondary" className="capitalize">
                             {(product.category || 'Device').replace(/-/g, ' ')}
                           </Badge>

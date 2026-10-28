@@ -2,6 +2,7 @@ import type { ProductStock, StockHistoryItem, StockFilterOptions, StockStatus, S
 import { fetchFromAPI } from './apiClient';
 import { ProductService } from './products';
 import { OfferProductService } from './offerProducts';
+import { isAndroidNewProduct, isAndroidUsedProduct, isIPhoneNewProduct, isIPhoneUsedProduct } from '../utils/categoryUtils';
 
 const LOCAL_STOCK_KEY = 'mstore_stock_records_v2';
 const LOCAL_HISTORY_KEY = 'mstore_stock_history_v1';
@@ -139,7 +140,14 @@ function enrichStockRecords(records: ProductStock[]): ProductStock[] {
     const p = prodMap.get(pid);
     const op = offerMap.get(pid);
     const name = p?.name || op?.name || record.productName || record.productId;
-    const cat = p?.category || record.productCategory || (op ? 'accessory' : (record.productId.includes('acc') ? 'accessory' : 'iphone-used'));
+    let cat = p?.category || record.productCategory || (op ? 'accessory' : (record.productId.includes('acc') ? 'accessory' : 'iphone-used'));
+    if (p) {
+      if (cat === 'android' || cat === 'used-android' || cat === 'android-new' || cat === 'android-used') {
+        cat = isAndroidNewProduct(p) ? 'android-new' : 'android-used';
+      } else if (cat === 'iphone' || cat === 'used-iphones' || cat === 'iphone-new' || cat === 'iphone-used') {
+        cat = isIPhoneNewProduct(p) ? 'iphone-new' : 'iphone-used';
+      }
+    }
     
     const pImg = p?.images && p.images.length > 0 ? p.images[0] : null;
     const image = pImg || op?.image || record.productImage || '/images/placeholder-iphone.svg';
@@ -176,7 +184,30 @@ export const StockService = {
       enriched = enriched.filter((r) => r.status === filters.status);
     }
     if (filters?.category && filters.category !== 'ALL') {
-      enriched = enriched.filter((r) => r.productCategory === filters.category);
+      const targetCat = filters.category;
+      if (targetCat === 'android-new') {
+        enriched = enriched.filter((r) => {
+          const p = prodMap.get(String(r.productId));
+          return r.productCategory === 'android-new' || (p && isAndroidNewProduct(p));
+        });
+      } else if (targetCat === 'android-used') {
+        enriched = enriched.filter((r) => {
+          const p = prodMap.get(String(r.productId));
+          return r.productCategory === 'android-used' || r.productCategory === 'used-android' || (p && isAndroidUsedProduct(p));
+        });
+      } else if (targetCat === 'iphone-new') {
+        enriched = enriched.filter((r) => {
+          const p = prodMap.get(String(r.productId));
+          return r.productCategory === 'iphone-new' || (p && isIPhoneNewProduct(p));
+        });
+      } else if (targetCat === 'iphone-used') {
+        enriched = enriched.filter((r) => {
+          const p = prodMap.get(String(r.productId));
+          return r.productCategory === 'iphone-used' || (p && isIPhoneUsedProduct(p));
+        });
+      } else {
+        enriched = enriched.filter((r) => r.productCategory === targetCat);
+      }
     }
     if (filters?.search?.trim()) {
       const q = filters.search.toLowerCase();
@@ -233,7 +264,33 @@ export const StockService = {
     }
 
     if (filters?.category && filters.category !== 'ALL') {
-      enriched = enriched.filter((s) => s.productCategory === filters.category);
+      const targetCat = filters.category;
+      const allProds = ProductService.getProductsSync();
+      const pMap = new Map(allProds.map((p) => [String(p.id), p]));
+
+      if (targetCat === 'android-new') {
+        enriched = enriched.filter((s) => {
+          const p = pMap.get(String(s.productId));
+          return s.productCategory === 'android-new' || (p && isAndroidNewProduct(p));
+        });
+      } else if (targetCat === 'android-used') {
+        enriched = enriched.filter((s) => {
+          const p = pMap.get(String(s.productId));
+          return s.productCategory === 'android-used' || s.productCategory === 'used-android' || (p && isAndroidUsedProduct(p));
+        });
+      } else if (targetCat === 'iphone-new') {
+        enriched = enriched.filter((s) => {
+          const p = pMap.get(String(s.productId));
+          return s.productCategory === 'iphone-new' || (p && isIPhoneNewProduct(p));
+        });
+      } else if (targetCat === 'iphone-used') {
+        enriched = enriched.filter((s) => {
+          const p = pMap.get(String(s.productId));
+          return s.productCategory === 'iphone-used' || (p && isIPhoneUsedProduct(p));
+        });
+      } else {
+        enriched = enriched.filter((s) => s.productCategory === targetCat);
+      }
     }
 
     if (filters?.status && filters.status !== 'ALL') {

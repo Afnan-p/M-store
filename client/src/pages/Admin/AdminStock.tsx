@@ -30,7 +30,9 @@ export const AdminStockPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [selectedStoreFilter, setSelectedStoreFilter] = useState('ALL');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<'ALL' | 'In Stock' | 'Low Stock' | 'Out of Stock'>('ALL');
-  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<'ALL' | 'iphone-new' | 'iphone-used' | 'accessory'>('ALL');
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<
+    'ALL' | 'iphone-new' | 'iphone-used' | 'android-new' | 'android-used' | 'accessory'
+  >('ALL');
 
   // Modal State
   const [selectedRecordForModal, setSelectedRecordForModal] = useState<ProductStock | null>(null);
@@ -195,6 +197,8 @@ export const AdminStockPage: React.FC = () => {
                 { value: 'ALL', label: 'All Categories' },
                 { value: 'iphone-new', label: 'Brand New iPhone' },
                 { value: 'iphone-used', label: 'Pre-Owned iPhone' },
+                { value: 'android-new', label: 'Brand New Android' },
+                { value: 'android-used', label: 'Pre-Owned Android' },
                 { value: 'accessory', label: 'Accessories' },
               ]}
               value={selectedCategoryFilter}
@@ -256,7 +260,11 @@ export const AdminStockPage: React.FC = () => {
                             <div className="text-[11px] text-zinc-500 font-medium">
                               {record.productCategory === 'accessory'
                                 ? 'Accessory'
-                                : `${record.productStorage || '128GB'} • ${record.productCategory === 'iphone-new' ? 'Brand New' : 'Pre-Owned'}`}
+                                : `${record.productStorage || '128GB'} • ${
+                                    record.productCategory === 'iphone-new' || record.productCategory === 'android-new'
+                                      ? 'Brand New'
+                                      : 'Pre-Owned'
+                                  }`}
                             </div>
                           </div>
                         </div>

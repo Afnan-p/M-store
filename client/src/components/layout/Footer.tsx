@@ -345,10 +345,21 @@ export const Footer: React.FC = () => {
 
                 <ul className="space-y-2.5 text-xs text-zinc-700">
                   <li className="flex items-center gap-2.5 p-1 rounded-lg">
-                    <div className="w-7 h-7 rounded-full bg-white border border-zinc-200 flex items-center justify-center shrink-0 text-zinc-800">
-                      <Phone className="w-3.5 h-3.5" />
-                    </div>
-                    <span className="font-semibold">+91 98765 43210</span>
+                    {settings.phone ? (
+                      <a href={`tel:${settings.phone.replace(/\s+/g, '')}`} className="flex items-center gap-2.5 hover:text-zinc-950 transition-colors">
+                        <div className="w-7 h-7 rounded-full bg-white border border-zinc-200 flex items-center justify-center shrink-0 text-zinc-800">
+                          <Phone className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="font-semibold">{settings.phone}</span>
+                      </a>
+                    ) : (
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-full bg-white border border-zinc-200 flex items-center justify-center shrink-0 text-zinc-800">
+                          <Phone className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="font-semibold">Support Available</span>
+                      </div>
+                    )}
                   </li>
                   <li className="flex items-center gap-2.5 p-1 rounded-lg">
                     <div className="w-7 h-7 rounded-full bg-white border border-zinc-200 flex items-center justify-center shrink-0 text-zinc-800">

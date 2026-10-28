@@ -110,26 +110,28 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-const server = app.listen(PORT, () => {
-  console.log(`====================================================`);
-  console.log(`🚀 M-Store Backend Express API running on port ${PORT}`);
-  console.log(`🔗 Health Check: http://localhost:${PORT}/api/health`);
-  console.log(`====================================================`);
-});
-
-// Graceful Shutdown Handler
-const shutdown = (signal) => {
-  console.log(`\n[Server] Received ${signal}. Starting graceful shutdown...`);
-  server.close(() => {
-    console.log('[Server] HTTP server closed.');
-    mongoose.connection.close(false, () => {
-      console.log('[MongoDB] Mongoose connection closed.');
-      process.exit(0);
-    });
+if (require.main === module && !process.env.VERCEL) {
+  const server = app.listen(PORT, () => {
+    console.log(`====================================================`);
+    console.log(`🚀 M-Store Backend Express API running on port ${PORT}`);
+    console.log(`🔗 Health Check: http://localhost:${PORT}/api/health`);
+    console.log(`====================================================`);
   });
-};
 
-process.on('SIGINT', () => shutdown('SIGINT'));
-process.on('SIGTERM', () => shutdown('SIGTERM'));
+  // Graceful Shutdown Handler
+  const shutdown = (signal) => {
+    console.log(`\n[Server] Received ${signal}. Starting graceful shutdown...`);
+    server.close(() => {
+      console.log('[Server] HTTP server closed.');
+      mongoose.connection.close(false, () => {
+        console.log('[MongoDB] Mongoose connection closed.');
+        process.exit(0);
+      });
+    });
+  };
+
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+}
 
 module.exports = app;

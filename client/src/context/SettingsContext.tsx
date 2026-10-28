@@ -13,7 +13,7 @@ interface SettingsContextType {
 const SettingsContext = createContext<SettingsContextType>({
   settings: DEFAULT_SETTINGS,
   loading: false,
-  whatsappCleanNumber: '918891003031',
+  whatsappCleanNumber: '',
   updateSettings: async () => DEFAULT_SETTINGS,
   refreshSettings: async () => {},
 });
@@ -62,7 +62,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return updated;
   };
 
-  const whatsappCleanNumber = (settings.whatsappNumber || '918891003031').replace(/\D/g, '');
+  const whatsappCleanNumber = (settings.whatsappNumber || '').replace(/\D/g, '');
 
   return (
     <SettingsContext.Provider

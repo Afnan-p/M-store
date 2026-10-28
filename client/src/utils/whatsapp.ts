@@ -1,4 +1,3 @@
-import { BRAND_CONFIG } from '../services/config';
 import type { Product } from '../types/product';
 import { OfferProductService } from '../services/offerProducts';
 import { SettingsService } from '../services/settings';
@@ -103,11 +102,11 @@ export function getWhatsAppProductLink(product: Product, offerContext?: string, 
 
   const message = lines.join('\n');
 
-  // Format phone number (digits only with dynamic SettingsService priority)
-  const rawNumber = whatsappNumberOverride || SettingsService.getSettingsSync().whatsappNumber || import.meta.env.VITE_WHATSAPP_NUMBER || BRAND_CONFIG.whatsappNumberClean || '918891003031';
+  // Format phone number (digits only, strictly from SettingsService / MongoDB Admin settings)
+  const rawNumber = whatsappNumberOverride || SettingsService.getSettingsSync().whatsappNumber || '';
   const cleanPhone = rawNumber.replace(/\D/g, '');
 
-  return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+  return cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}` : '#';
 }
 
 /**
@@ -118,8 +117,8 @@ export function getGeneralWhatsAppLink(customMessage?: string, whatsappNumberOve
     customMessage ||
     `👋 Hi M Store, I would like to inquire about available iPhones, pre-owned devices, offers, or showroom locations in Kerala.`;
 
-  const rawNumber = whatsappNumberOverride || SettingsService.getSettingsSync().whatsappNumber || import.meta.env.VITE_WHATSAPP_NUMBER || BRAND_CONFIG.whatsappNumberClean || '918891003031';
+  const rawNumber = whatsappNumberOverride || SettingsService.getSettingsSync().whatsappNumber || '';
   const cleanPhone = rawNumber.replace(/\D/g, '');
 
-  return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(defaultMsg)}`;
+  return cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(defaultMsg)}` : '#';
 }

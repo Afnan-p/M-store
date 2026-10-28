@@ -5,8 +5,8 @@ const STORAGE_KEY = 'mstore_settings_v1';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export const DEFAULT_SETTINGS: StoreSettings = {
-  whatsappNumber: import.meta.env.VITE_WHATSAPP_NUMBER || BRAND_CONFIG.whatsappNumber || '+91 88910 03031',
-  phone: import.meta.env.VITE_STORE_PHONE || BRAND_CONFIG.phone || '+91 99463 36587',
+  whatsappNumber: '',
+  phone: '',
   email: BRAND_CONFIG.email || 'admin@mstore.in',
   address: 'Kootanad, Palakkad',
   workingHours: '10:00 AM - 9:00 PM Daily',

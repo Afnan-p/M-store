@@ -8,8 +8,8 @@ router.get('/', async (req, res) => {
     let settings = await Settings.findOne();
     if (!settings) {
       settings = await Settings.create({
-        whatsappNumber: process.env.VITE_WHATSAPP_NUMBER || '+91 88910 03031',
-        phone: process.env.VITE_STORE_PHONE || '+91 99463 36587',
+        whatsappNumber: '',
+        phone: '',
         email: 'admin@mstore.in',
         address: 'Kootanad, Palakkad',
         workingHours: '10:00 AM - 9:00 PM Daily',

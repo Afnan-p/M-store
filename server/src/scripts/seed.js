@@ -1,5 +1,12 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const dns = require('dns');
+
+// Use reliable public DNS to prevent local ISP DNS SRV failures
+try {
+  dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+} catch (_) {}
+
 const Store = require('../models/Store');
 const Product = require('../models/Product');
 

@@ -4,12 +4,19 @@ const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const { protect, adminOnly } = require('../middleware/auth');
 
-// Configure Cloudinary securely
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'demo_mstore',
-  api_key: process.env.CLOUDINARY_API_KEY || '123456789012345',
-  api_secret: process.env.CLOUDINARY_API_SECRET || 'abcdefghijklmnopqrstuvwxyz12',
-});
+const path = require('path');
+const dotenv = require('dotenv');
+
+// Dynamically configure Cloudinary on-the-fly to always use the latest .env credentials
+function getCloudinary() {
+  dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'demo_mstore',
+    api_key: process.env.CLOUDINARY_API_KEY || '123456789012345',
+    api_secret: process.env.CLOUDINARY_API_SECRET || 'abcdefghijklmnopqrstuvwxyz12',
+  });
+  return cloudinary;
+}
 
 // Allowed Image MIME types
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
@@ -46,11 +53,12 @@ router.post('/', protect, adminOnly, (req, res, next) => {
       }
 
       // Check if Cloudinary credentials are configured
+      const cloud = getCloudinary();
       if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_CLOUD_NAME !== 'demo_mstore') {
         const b64 = Buffer.from(req.file.buffer).toString('base64');
         const dataURI = `data:${req.file.mimetype};base64,${b64}`;
 
-        const result = await cloudinary.uploader.upload(dataURI, {
+        const result = await cloud.uploader.upload(dataURI, {
           folder: 'mstore',
           transformation: [{ width: 1200, height: 1200, crop: 'limit', quality: 'auto', fetch_format: 'webp' }],
         });
@@ -83,7 +91,8 @@ router.delete('/', protect, adminOnly, async (req, res) => {
 
   try {
     if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_CLOUD_NAME !== 'demo_mstore') {
-      const result = await cloudinary.uploader.destroy(public_id);
+      const cloud = getCloudinary();
+      const result = await cloud.uploader.destroy(public_id);
       return res.json({ message: 'Image deleted from Cloudinary', result });
     }
     return res.json({ message: 'Mock image deleted successfully' });

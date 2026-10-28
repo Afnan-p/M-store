@@ -368,7 +368,9 @@ export const AdminDashboard: React.FC = () => {
                             {record.productCategory === 'accessory'
                               ? 'Accessory'
                               : `${record.productStorage || '128GB'} • ${
-                                  record.productCategory === 'iphone-new' ? 'Brand New' : 'Pre-Owned'
+                                  record.productCategory === 'iphone-new' || record.productCategory === 'android-new'
+                                    ? 'Brand New'
+                                    : 'Pre-Owned'
                                 }`}
                           </div>
                         </div>
@@ -382,8 +384,8 @@ export const AdminDashboard: React.FC = () => {
                         </td>
                       )}
                       <td className="p-3">
-                        {record.productCategory === 'iphone-used' && <Badge variant="used">Pre-Owned</Badge>}
-                        {record.productCategory === 'iphone-new' && <Badge variant="new">Brand New</Badge>}
+                        {(record.productCategory === 'iphone-used' || record.productCategory === 'android-used') && <Badge variant="used">Pre-Owned</Badge>}
+                        {(record.productCategory === 'iphone-new' || record.productCategory === 'android-new') && <Badge variant="new">Brand New</Badge>}
                         {record.productCategory === 'accessory' && <Badge variant="accessory">Accessory</Badge>}
                       </td>
                       <td className="p-3 font-bold text-zinc-900">{formatCurrency(record.productPrice || 0)}</td>

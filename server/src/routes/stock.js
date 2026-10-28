@@ -129,7 +129,25 @@ router.get('/', async (req, res) => {
         );
       }
       if (category && category !== 'ALL') {
-        filtered = filtered.filter((item) => item.productCategory === category);
+        if (category === 'android-new') {
+          filtered = filtered.filter((item) => {
+            const p = prodMap.get(String(item.productId));
+            return item.productCategory === 'android-new' || (p && (p.category === 'android' || p.category === 'android-new') && p.condition === 'Brand New');
+          });
+        } else if (category === 'android-used') {
+          filtered = filtered.filter((item) => {
+            const p = prodMap.get(String(item.productId));
+            return item.productCategory === 'android-used' || item.productCategory === 'used-android' || (p && (p.category === 'android' || p.category === 'android-used') && p.condition !== 'Brand New');
+          });
+        } else if (category === 'iphone-new') {
+          filtered = filtered.filter((item) => item.productCategory === 'iphone-new');
+        } else if (category === 'iphone-used') {
+          filtered = filtered.filter((item) => item.productCategory === 'iphone-used' || item.productCategory === 'used-iphones');
+        } else if (category === 'accessory') {
+          filtered = filtered.filter((item) => item.productCategory === 'accessory');
+        } else {
+          filtered = filtered.filter((item) => item.productCategory === category);
+        }
       }
       if (status && status !== 'ALL') {
         filtered = filtered.filter((item) => item.status === status);

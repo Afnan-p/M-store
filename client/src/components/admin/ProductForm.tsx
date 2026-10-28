@@ -11,7 +11,7 @@ import { useStore } from '../../context/StoreContext';
 import { Button } from '../common/Button';
 import { CustomSelect } from '../common/CustomSelect';
 import { uploadImageToCloudinary } from '../../services/cloudinary';
-import { Upload, X, Gift, Trash2, Check, Plus, ChevronDown, AlertCircle } from 'lucide-react';
+import { Upload, X, Gift, Trash2, Check, Plus, ChevronDown, AlertCircle, Star, Layers, Image as ImageIcon, RefreshCw } from 'lucide-react';
 import { isIPhoneProduct, isAndroidProduct, getAndroidBrandName } from '../../utils/categoryUtils';
 
 const POPULAR_COLORS = [
@@ -244,17 +244,37 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     };
   }, [isOfferPickerOpen]);
 
-  const [images, setImages] = useState<string[]>(
-    initialData?.images || [
-      'https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=1000&auto=format&fit=crop',
-    ]
-  );
-  const [imageInput, setImageInput] = useState('');
+  const DEFAULT_COVER_IMAGE =
+    'https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=1000&auto=format&fit=crop';
+
+  const [coverImage, setCoverImage] = useState<string>(() => {
+    if (initialData?.images && initialData.images.length > 0) return initialData.images[0];
+    if (initialData?.image) return initialData.image;
+    return DEFAULT_COVER_IMAGE;
+  });
+
+  const [galleryImages, setGalleryImages] = useState<string[]>(() => {
+    if (initialData?.images && initialData.images.length > 1) {
+      return initialData.images.slice(1);
+    }
+    return [];
+  });
+
+  const [coverUrlInput, setCoverUrlInput] = useState('');
+  const [galleryUrlInput, setGalleryUrlInput] = useState('');
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (initialData?.images && initialData.images.length > 0) {
-      setImages(initialData.images);
+    if (initialData) {
+      if (initialData.images && initialData.images.length > 0) {
+        setCoverImage(initialData.images[0]);
+        setGalleryImages(initialData.images.slice(1));
+      } else if (initialData.image) {
+        setCoverImage(initialData.image);
+        setGalleryImages([]);
+      }
     }
   }, [initialData]);
 
@@ -262,39 +282,84 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     OfferProductService.getOfferProducts().then(setAvailableOfferProducts);
   }, []);
 
-  const isDefaultUnsplashImage = (url: string) =>
-    url.includes('images.unsplash.com/photo-1695048133142') || url.includes('placeholder');
-
-  const handleAddImageUrl = () => {
-    const trimmed = imageInput.trim();
-    if (trimmed) {
-      if (images.length === 1 && isDefaultUnsplashImage(images[0])) {
-        setImages([trimmed]);
-      } else {
-        setImages((prev) => [...prev, trimmed]);
-      }
-      setImageInput('');
-    }
-  };
-
-  const handleRemoveImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index));
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Cover Image Handlers
+  const handleCoverFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       try {
+        setUploadingCover(true);
         const uploadedUrl = await uploadImageToCloudinary(file);
-        if (images.length === 1 && isDefaultUnsplashImage(images[0])) {
-          setImages([uploadedUrl]);
-        } else {
-          setImages((prev) => [...prev, uploadedUrl]);
+        if (uploadedUrl) {
+          setCoverImage(uploadedUrl);
         }
       } catch (error) {
-        console.error('Failed to upload image:', error);
+        console.error('Failed to upload cover image:', error);
+      } finally {
+        setUploadingCover(false);
+        e.target.value = '';
       }
     }
+  };
+
+  const handleSetCoverUrl = () => {
+    const trimmed = coverUrlInput.trim();
+    if (trimmed) {
+      setCoverImage(trimmed);
+      setCoverUrlInput('');
+    }
+  };
+
+  // Additional Multi-Angle / Detail Gallery Handlers
+  const handleGalleryFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        setUploadingGallery(true);
+        const uploadedUrl = await uploadImageToCloudinary(file);
+        if (uploadedUrl) {
+          setGalleryImages((prev) => [...prev, uploadedUrl]);
+        }
+      } catch (error) {
+        console.error('Failed to upload gallery image:', error);
+      } finally {
+        setUploadingGallery(false);
+        e.target.value = '';
+      }
+    }
+  };
+
+  const handleAddGalleryUrl = () => {
+    const trimmed = galleryUrlInput.trim();
+    if (trimmed) {
+      setGalleryImages((prev) => [...prev, trimmed]);
+      setGalleryUrlInput('');
+    }
+  };
+
+  const handleRemoveGalleryImage = (index: number) => {
+    setGalleryImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handlePromoteToCover = (index: number) => {
+    const targetImage = galleryImages[index];
+    if (!targetImage) return;
+    const oldCover = coverImage;
+    const updatedGallery = [...galleryImages];
+    updatedGallery[index] = oldCover;
+    setCoverImage(targetImage);
+    setGalleryImages(updatedGallery);
+  };
+
+  const handleMoveGallery = (index: number, direction: 'left' | 'right') => {
+    const targetIndex = direction === 'left' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= galleryImages.length) return;
+    setGalleryImages((prev) => {
+      const copy = [...prev];
+      const temp = copy[index];
+      copy[index] = copy[targetIndex];
+      copy[targetIndex] = temp;
+      return copy;
+    });
   };
 
   // Add Free Item to Offer
@@ -384,6 +449,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       const isUsed = finalCategory === 'iphone-used' || finalCategory === 'android-used' || (condition !== 'Brand New' && !isBrandNew);
       const finalCondition = isAccessoryForm ? 'Brand New' : (isBrandNew ? 'Brand New' : (condition === 'Brand New' ? 'Excellent' : condition));
 
+      const allImages = [coverImage, ...galleryImages].filter(Boolean);
+      const finalImages = allImages.length > 0 ? allImages : [DEFAULT_COVER_IMAGE];
+
       await onSubmit({
         name: name.trim(),
         model: finalModel,
@@ -403,7 +471,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         color,
         warranty,
         description,
-        images: images.length > 0 ? images : ['https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=1000&auto=format&fit=crop'],
+        image: finalImages[0],
+        images: finalImages,
         available,
         featured,
         isOffer: offerEnabled,
@@ -1168,61 +1237,236 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         )}
       </div>
 
-      {/* Image Uploader */}
-      <div className="bg-white border border-zinc-200 p-4 sm:p-6 rounded-2xl space-y-4 shadow-sm overflow-hidden">
-        <h3 className="text-base font-bold text-zinc-900 border-b border-zinc-200 pb-3">
-          Device Images
-        </h3>
+      {/* Device Images Section */}
+      <div className="bg-white border border-zinc-200 p-4 sm:p-6 rounded-2xl space-y-6 shadow-sm overflow-hidden">
+        <div className="border-b border-zinc-200 pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+          <div>
+            <h3 className="text-base font-bold text-zinc-900 flex items-center gap-2">
+              <ImageIcon className="w-5 h-5 text-[#E50914]" />
+              <span>Device Showcase & Multi-Angle Images</span>
+            </h3>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              Specify your primary showcase cover photo and upload multiple detail angles (back, sides, camera, box).
+            </p>
+          </div>
+          <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full self-start sm:self-auto">
+            ☁️ Cloudinary Connected
+          </span>
+        </div>
 
-        <div className="space-y-3">
-          {/* File Upload / Cloudinary Ready */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-            <label className="cursor-pointer px-4 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-xl text-xs font-semibold flex items-center justify-center sm:justify-start gap-2 transition-colors border border-zinc-200">
-              <Upload className="w-4 h-4 shrink-0" />
-              <span>Choose Image File (Cloudinary Ready)</span>
-              <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
-            </label>
-            <span className="text-[11px] text-zinc-500 font-medium text-center sm:text-left">Or paste image URL below</span>
+        {/* 1. PRIMARY COVER IMAGE */}
+        <div className="p-4 bg-gradient-to-br from-amber-50/60 via-orange-50/20 to-white border-2 border-amber-300/80 rounded-2xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/60 pb-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 bg-amber-500 text-white text-[10px] font-black uppercase tracking-wider rounded-md flex items-center gap-1 shadow-xs">
+                  <Star className="w-3 h-3 fill-white" /> Primary Cover Image
+                </span>
+                <span className="text-xs font-black text-zinc-900">Main Product Thumbnail & Showcase</span>
+              </div>
+              <p className="text-[11px] text-zinc-600 mt-1">
+                This exact image is shown on store listings, search filters, WhatsApp shares, and the main hero banner.
+              </p>
+            </div>
+            {coverImage && (
+              <span className="text-[11px] font-semibold text-amber-800 bg-amber-100/70 px-2 py-0.5 rounded-md self-start sm:self-auto">
+                1 Cover Active
+              </span>
+            )}
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full">
-            <input
-              type="url"
-              value={imageInput}
-              onChange={(e) => setImageInput(e.target.value)}
-              placeholder="https://images.unsplash.com/..."
-              className="w-full sm:flex-1 min-w-0 px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs text-zinc-900 focus:outline-none focus:border-[#E50914]"
-            />
-            <button
-              type="button"
-              onClick={handleAddImageUrl}
-              className="w-full sm:w-auto px-5 py-2.5 bg-zinc-900 text-white hover:bg-black rounded-xl text-xs font-bold transition-colors whitespace-nowrap shrink-0"
-            >
-              Add URL
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-            {images.map((img, idx) => (
-              <div key={idx} className="relative group rounded-xl overflow-hidden bg-zinc-50 border border-zinc-200 h-28 flex items-center justify-center p-1">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+            {/* Cover Preview Card */}
+            <div className="md:col-span-4 lg:col-span-3">
+              <div className="relative group w-full aspect-square max-h-48 rounded-xl bg-white border-2 border-amber-300 shadow-sm overflow-hidden flex items-center justify-center p-2">
                 <img
-                  src={img}
-                  alt=""
+                  src={coverImage || '/images/placeholder-iphone.svg'}
+                  alt="Primary Cover"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = '/images/placeholder-iphone.svg';
                   }}
-                  className="max-h-full max-w-full object-contain p-1"
+                  className="max-h-full max-w-full object-contain drop-shadow-sm"
+                />
+                <div className="absolute top-2 left-2 bg-amber-500/95 backdrop-blur-xs text-white text-[10px] font-black px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
+                  <Star className="w-2.5 h-2.5 fill-white" /> COVER
+                </div>
+              </div>
+            </div>
+
+            {/* Cover Upload / URL Controls */}
+            <div className="md:col-span-8 lg:col-span-9 space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <label className={`cursor-pointer px-4 py-2.5 ${uploadingCover ? 'bg-amber-100 text-amber-800 cursor-not-allowed' : 'bg-zinc-900 hover:bg-black text-white'} rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-xs`}>
+                  {uploadingCover ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin text-amber-700" />
+                      <span>Uploading to Cloudinary...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 shrink-0 text-amber-400" />
+                      <span>Upload New Cover Image (Device Front/Hero)</span>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={uploadingCover}
+                    onChange={handleCoverFileUpload}
+                    className="hidden"
+                  />
+                </label>
+                <span className="text-[11px] text-zinc-500 font-medium">Or paste an external image URL:</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="url"
+                  value={coverUrlInput}
+                  onChange={(e) => setCoverUrlInput(e.target.value)}
+                  placeholder="https://... or paste image URL"
+                  className="flex-1 min-w-0 px-3.5 py-2 bg-white border border-amber-300/80 rounded-xl text-xs text-zinc-900 focus:outline-none focus:border-amber-500"
                 />
                 <button
                   type="button"
-                  onClick={() => handleRemoveImage(idx)}
-                  className="absolute top-1.5 right-1.5 p-1 bg-rose-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-xs"
+                  onClick={handleSetCoverUrl}
+                  className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-colors whitespace-nowrap"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  Set as Cover
                 </button>
               </div>
-            ))}
+            </div>
           </div>
+        </div>
+
+        {/* 2. ADDITIONAL MULTI-ANGLE & DETAIL GALLERY VIEWS */}
+        <div className="p-4 bg-zinc-50/80 border border-zinc-200 rounded-2xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200/80 pb-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 bg-zinc-800 text-white text-[10px] font-black uppercase tracking-wider rounded-md flex items-center gap-1">
+                  <Layers className="w-3 h-3" /> Multi-Angle Gallery
+                </span>
+                <span className="text-xs font-black text-zinc-900">Additional Views & Detail Angles (Optional)</span>
+              </div>
+              <p className="text-[11px] text-zinc-500 mt-1">
+                Add back side, side edges, camera glass closeup, bill/box photos, or condition proofs. Customers can swipe these on product page.
+              </p>
+            </div>
+            <span className="text-[11px] font-semibold text-zinc-600 bg-zinc-200/80 px-2 py-0.5 rounded-md self-start sm:self-auto">
+              {galleryImages.length} {galleryImages.length === 1 ? 'Angle Added' : 'Angles Added'}
+            </span>
+          </div>
+
+          {/* Add Gallery Angle Controls */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <label className={`cursor-pointer px-4 py-2.5 ${uploadingGallery ? 'bg-zinc-200 text-zinc-500 cursor-not-allowed' : 'bg-white hover:bg-zinc-100 text-zinc-800 border border-zinc-300'} rounded-xl text-xs font-bold flex items-center justify-center sm:justify-start gap-2 transition-all shadow-xs`}>
+              {uploadingGallery ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin text-zinc-700" />
+                  <span>Uploading angle...</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4 shrink-0 text-[#E50914]" />
+                  <span>+ Add Different View / Angle (Cloudinary)</span>
+                </>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                disabled={uploadingGallery}
+                onChange={handleGalleryFileUpload}
+                className="hidden"
+              />
+            </label>
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <input
+                type="url"
+                value={galleryUrlInput}
+                onChange={(e) => setGalleryUrlInput(e.target.value)}
+                placeholder="Or paste angle image URL..."
+                className="flex-1 min-w-0 px-3.5 py-2 bg-white border border-zinc-200 rounded-xl text-xs text-zinc-900 focus:outline-none focus:border-zinc-400"
+              />
+              <button
+                type="button"
+                onClick={handleAddGalleryUrl}
+                className="px-4 py-2 bg-zinc-900 hover:bg-black text-white rounded-xl text-xs font-bold transition-colors whitespace-nowrap"
+              >
+                + Add View
+              </button>
+            </div>
+          </div>
+
+          {/* Gallery Thumbnails List */}
+          {galleryImages.length === 0 ? (
+            <div className="p-4 bg-white border border-dashed border-zinc-300 rounded-xl text-center text-xs text-zinc-400">
+              No extra angle views added yet. Click "+ Add Different View / Angle" above to add Back View, Side Profile, Box, etc.
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 pt-1">
+              {galleryImages.map((img, idx) => (
+                <div
+                  key={idx}
+                  className="relative group rounded-xl bg-white border border-zinc-200 hover:border-zinc-400 transition-all p-2 flex flex-col items-center justify-between gap-1.5 shadow-2xs"
+                >
+                  <div className="w-full h-24 flex items-center justify-center overflow-hidden rounded-lg bg-zinc-50">
+                    <img
+                      src={img}
+                      alt={`View ${idx + 2}`}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '/images/placeholder-iphone.svg';
+                      }}
+                      className="max-h-full max-w-full object-contain p-1"
+                    />
+                  </div>
+                  <div className="w-full flex items-center justify-between pt-1 border-t border-zinc-100">
+                    <span className="text-[10px] font-black text-zinc-500">Angle #{idx + 1}</span>
+                    <div className="flex items-center gap-1">
+                      {idx > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => handleMoveGallery(idx, 'left')}
+                          title="Move Left"
+                          className="p-1 hover:bg-zinc-100 text-zinc-600 rounded text-[10px] font-bold"
+                        >
+                          ◀
+                        </button>
+                      )}
+                      {idx < galleryImages.length - 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleMoveGallery(idx, 'right')}
+                          title="Move Right"
+                          className="p-1 hover:bg-zinc-100 text-zinc-600 rounded text-[10px] font-bold"
+                        >
+                          ▶
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveGalleryImage(idx)}
+                        title="Remove this angle"
+                        className="p-1 hover:bg-rose-100 text-rose-600 rounded transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                  {/* Promote to Cover button */}
+                  <button
+                    type="button"
+                    onClick={() => handlePromoteToCover(idx)}
+                    className="w-full py-1 px-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300/80 rounded-lg text-[10px] font-black flex items-center justify-center gap-1 transition-colors"
+                    title="Make this the main cover image"
+                  >
+                    <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-600" />
+                    <span>Set as Cover</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

@@ -24,14 +24,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen = false, onCl
     { label: 'Overview', path: '/mstore-management-portal', icon: <LayoutDashboard className="w-4 h-4" /> },
     { label: 'All Products', path: '/mstore-management-portal/products', icon: <Package className="w-4 h-4" /> },
     { label: 'Products Stock', path: '/mstore-management-portal/stock', icon: <Layers className="w-4 h-4" /> },
+    { label: 'Add New Device', path: '/mstore-management-portal/products/new?type=device', icon: <Smartphone className="w-4 h-4" /> },
+    { label: 'Add Accessory', path: '/mstore-management-portal/products/new?type=accessory', icon: <Headphones className="w-4 h-4" /> },
     { label: 'Offer Products', path: '/mstore-management-portal/offer-products', icon: <Gift className="w-4 h-4" /> },
     { label: 'Offers', path: '/mstore-management-portal/offers', icon: <Sparkles className="w-4 h-4" /> },
     { label: 'Shop Categories', path: '/mstore-management-portal/categories', icon: <FolderTree className="w-4 h-4" /> },
     { label: 'iPhone Segments', path: '/mstore-management-portal/segments', icon: <Layers className="w-4 h-4" /> },
     { label: 'Showroom Stores', path: '/mstore-management-portal/stores', icon: <Store className="w-4 h-4" /> },
     { label: 'Store Settings', path: '/mstore-management-portal/settings', icon: <Settings className="w-4 h-4" /> },
-    { label: 'Add New Device', path: '/mstore-management-portal/products/new?type=device', icon: <Smartphone className="w-4 h-4" /> },
-    { label: 'Add Accessory', path: '/mstore-management-portal/products/new?type=accessory', icon: <Headphones className="w-4 h-4" /> },
   ];
 
   const sidebarContent = (

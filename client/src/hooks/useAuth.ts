@@ -7,10 +7,27 @@ export function useAuth() {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    AuthService.getCurrentUser().then((u) => {
-      setUser(u);
-      setLoading(false);
-    });
+    const syncUser = () => {
+      AuthService.getCurrentUser().then((u) => {
+        setUser(u);
+        setLoading(false);
+      });
+    };
+
+    syncUser();
+
+    const handleAuthUpdated = (e: any) => {
+      if (e && e.detail) {
+        setUser(e.detail);
+      } else {
+        syncUser();
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('mstore_auth_updated', handleAuthUpdated);
+      return () => window.removeEventListener('mstore_auth_updated', handleAuthUpdated);
+    }
   }, []);
 
   const login = async (email: string, pass: string) => {
@@ -24,11 +41,18 @@ export function useAuth() {
     setUser(null);
   };
 
+  const updateCredentials = async (data: { currentPassword: string; newEmail?: string; newPassword?: string }) => {
+    const updated = await AuthService.updateCredentials(data);
+    setUser(updated);
+    return updated;
+  };
+
   return {
     user,
     loading,
     isAuthenticated: Boolean(user),
     login,
     logout,
+    updateCredentials,
   };
 }

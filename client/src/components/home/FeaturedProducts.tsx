@@ -5,7 +5,7 @@ import { ProductGrid } from '../product/ProductGrid';
 import { useStore } from '../../context/StoreContext';
 import { ArrowRight, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
-import { isNonIPhoneDevice, isIPhoneNewProduct, isIPhoneUsedProduct, isIPhoneProduct } from '../../utils/categoryUtils';
+import { isNonIPhoneDevice, isIPhoneNewProduct, isIPhoneUsedProduct, isIPhoneProduct, isAndroidProduct } from '../../utils/categoryUtils';
 
 interface FeaturedProductsProps {
   products: Product[];
@@ -15,7 +15,7 @@ interface FeaturedProductsProps {
 export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({ products, loading }) => {
   const { ref, isVisible } = useScrollReveal<HTMLElement>({ threshold: 0.08 });
   const { activeStoreId, activeStore } = useStore();
-  const [activeTab, setActiveTab] = React.useState<'all' | 'new' | 'used' | 'accessory'>('all');
+  const [activeTab, setActiveTab] = React.useState<'all' | 'new' | 'used' | 'accessory' | 'android'>('all');
   const [showRightArrow, setShowRightArrow] = React.useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const row2ScrollRef = useRef<HTMLDivElement>(null);

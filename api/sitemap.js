@@ -1,5 +1,5 @@
 module.exports = async (req, res) => {
-  const siteUrl = 'https://m-store-two.vercel.app';
+  const siteUrl = process.env.VITE_SITE_URL || 'https://m-store-two.vercel.app';
   const backendApiUrl = process.env.VITE_API_URL || 'https://m-store-backend.onrender.com/api';
 
   let products = [];

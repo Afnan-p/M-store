@@ -4,11 +4,11 @@ const settingsSchema = new mongoose.Schema(
   {
     whatsappNumber: {
       type: String,
-      default: '+91 88910 03031',
+      default: '',
     },
     phone: {
       type: String,
-      default: '+91 99463 36587',
+      default: '',
     },
     email: {
       type: String,

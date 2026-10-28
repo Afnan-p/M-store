@@ -70,10 +70,10 @@ function loadCategoriesFromStorage(): CategoryItem[] {
   return INITIAL_CATEGORIES;
 }
 
-function saveCategoriesToStorage(categories: CategoryItem[]): void {
+function saveCategoriesToStorage(categories: CategoryItem[], notify: boolean = true): void {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(categories));
-    if (typeof window !== 'undefined') {
+    if (notify && typeof window !== 'undefined') {
       window.dispatchEvent(new Event('mstore_categories_updated'));
     }
   } catch (err) {
@@ -96,7 +96,7 @@ export const CategoryService = {
       remote.forEach((cat) => map.set(cat.slug, { ...map.get(cat.slug), ...cat }));
       list = Array.from(map.values()).sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
     }
-    saveCategoriesToStorage(list);
+    saveCategoriesToStorage(list, false);
     return list;
   },
 

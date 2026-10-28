@@ -78,10 +78,10 @@ function loadStoresFromStorage(): Store[] {
   return INITIAL_STORES;
 }
 
-function saveStoresToStorage(stores: Store[]): void {
+function saveStoresToStorage(stores: Store[], notify: boolean = true): void {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(stores));
-    if (typeof window !== 'undefined') {
+    if (notify && typeof window !== 'undefined') {
       window.dispatchEvent(new Event('mstore_stores_updated'));
     }
   } catch (err) {
@@ -97,7 +97,7 @@ export const StoreService = {
   async getStores(): Promise<Store[]> {
     const remote = await fetchFromAPI<Store[]>('/stores');
     if (remote && Array.isArray(remote)) {
-      saveStoresToStorage(remote);
+      saveStoresToStorage(remote, false);
       return remote;
     }
     return loadStoresFromStorage();

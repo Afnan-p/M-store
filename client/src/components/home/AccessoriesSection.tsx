@@ -143,6 +143,33 @@ export const AccessoriesSection: React.FC = () => {
     ? targetAccessories
     : (realAccessories.length > 0 ? realAccessories : FALLBACK_ACCESSORY_PRODUCTS);
 
+  const displayAccessories: AccessoryItem[] = finalAccessories.slice(0, 5).map((p) => ({
+    id: p.id,
+    name: p.name,
+    desc: p.description || p.subCategory || 'Apple Essential Accessory',
+    price: p.price,
+    originalPrice: p.originalPrice,
+    image: p.images && p.images.length > 0 ? p.images[0] : '/images/cat-accessories.png',
+    link: getProductPath(p),
+    product: p,
+  }));
+
+  React.useEffect(() => {
+    if (loading) return;
+    checkScroll();
+    const el = scrollContainerRef.current;
+    if (el) {
+      el.addEventListener('scroll', checkScroll);
+      window.addEventListener('resize', checkScroll);
+    }
+    return () => {
+      if (el) {
+        el.removeEventListener('scroll', checkScroll);
+        window.removeEventListener('resize', checkScroll);
+      }
+    };
+  }, [loading, displayAccessories]);
+
   // Loading state skeleton to prevent initial blank flash or lag
   if (loading) {
     return (
@@ -171,32 +198,6 @@ export const AccessoriesSection: React.FC = () => {
       </section>
     );
   }
-
-  const displayAccessories: AccessoryItem[] = finalAccessories.slice(0, 5).map((p) => ({
-    id: p.id,
-    name: p.name,
-    desc: p.description || p.subCategory || 'Apple Essential Accessory',
-    price: p.price,
-    originalPrice: p.originalPrice,
-    image: p.images && p.images.length > 0 ? p.images[0] : '/images/cat-accessories.png',
-    link: getProductPath(p),
-    product: p,
-  }));
-
-  React.useEffect(() => {
-    checkScroll();
-    const el = scrollContainerRef.current;
-    if (el) {
-      el.addEventListener('scroll', checkScroll);
-      window.addEventListener('resize', checkScroll);
-    }
-    return () => {
-      if (el) {
-        el.removeEventListener('scroll', checkScroll);
-        window.removeEventListener('resize', checkScroll);
-      }
-    };
-  }, [displayAccessories]);
 
   return (
     <section ref={ref} className="py-9 sm:py-12 lg:py-11 bg-white border-b border-zinc-200/60">

@@ -19,7 +19,14 @@ router.get('/', async (req, res) => {
     res.json(settings);
   } catch (err) {
     console.error('Error fetching settings:', err);
-    res.status(500).json({ error: 'Server error loading settings' });
+    res.json({
+      whatsappNumber: '',
+      phone: '',
+      email: 'admin@mstore.in',
+      address: 'Kootanad, Palakkad',
+      workingHours: '10:00 AM - 9:00 PM Daily',
+      instagram: 'https://instagram.com/m_store_official',
+    });
   }
 });
 

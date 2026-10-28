@@ -1,11 +1,20 @@
 // Frontend API Client Adapter connecting React to Express API Backend
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const getApiBaseUrl = (): string => {
+  if (typeof window !== 'undefined') {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!isLocal) {
+      // In production (Vercel / deployed domain), always use relative /api endpoint
+      return '/api';
+    }
+  }
+  return import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+};
 
 export async function fetchFromAPI<T>(
   endpoint: string,
   options?: RequestInit & { timeoutMs?: number }
 ): Promise<T | null> {
-  const timeoutMs = options?.timeoutMs || 2000;
+  const timeoutMs = options?.timeoutMs || 8000;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -21,7 +30,8 @@ export async function fetchFromAPI<T>(
   };
 
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const baseUrl = getApiBaseUrl();
+    const response = await fetch(`${baseUrl}${endpoint}`, {
       ...fetchOptions,
       headers,
       signal: controller.signal,

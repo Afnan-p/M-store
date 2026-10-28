@@ -67,6 +67,16 @@ const authLimiter = rateLimit({
 app.use('/api/', generalApiLimiter);
 app.use('/api/auth/login', authLimiter);
 
+// Database connection middleware for Serverless (Vercel) & traditional servers
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+  } catch (err) {
+    console.warn('[DB Middleware Warning]:', err.message);
+  }
+  next();
+});
+
 // Mounting API Routes
 app.use('/api/health', require('./routes/health'));
 app.use('/api/stores', require('./routes/stores'));

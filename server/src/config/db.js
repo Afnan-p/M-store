@@ -22,7 +22,9 @@ const connectDB = async () => {
   }
 
   if (!cached.promise) {
-    const mongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/mstore_db';
+    const mongoUri =
+      process.env.MONGO_URI ||
+      'mongodb+srv://mstore_user:DRzh2%255q%40fs_b_S@cluster0.ysnwuzy.mongodb.net/mstore_db?retryWrites=true&w=majority';
 
     // Register event listeners once
     if (mongoose.connection.listenerCount('error') === 0) {

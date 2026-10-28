@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const Product = require('../models/Product');
 const ProductStock = require('../models/ProductStock');
 const { protect, adminOnly } = require('../middleware/auth');
+const connectDB = require('../config/db');
 
 const INITIAL_PRODUCTS = [];
 
@@ -31,14 +32,15 @@ router.get('/', async (req, res) => {
   const { category, available } = req.query;
 
   try {
-    if (isDbConnected()) {
-      const filter = {};
-      if (category) filter.category = category;
-      if (available !== undefined) {
-        filter.available = available === 'true';
-      }
+    await connectDB();
+    const filter = {};
+    if (category) filter.category = category;
+    if (available !== undefined) {
+      filter.available = available === 'true';
+    }
 
-      const products = await Product.find(filter).sort({ createdAt: -1 }).lean();
+    const products = await Product.find(filter).sort({ createdAt: -1 }).lean();
+    if (products && products.length > 0) {
       const formatted = products.map((p) => ({
         ...p,
         id: p.id || String(p._id),

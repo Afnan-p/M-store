@@ -1,17 +1,51 @@
+const fs = require('fs');
+const path = require('path');
+
+// Ensure server/node_modules is included in resolution path
+try {
+  const serverModulesPath = path.join(process.cwd(), 'server', 'node_modules');
+  if (fs.existsSync(serverModulesPath) && !module.paths.includes(serverModulesPath)) {
+    module.paths.push(serverModulesPath);
+  }
+} catch (e) {}
+
+let connectDB = null;
+let Product = null;
+
+try {
+  connectDB = require('../server/src/config/db');
+  Product = require('../server/src/models/Product');
+} catch (err) {
+  console.warn('[Vercel Sitemap Serverless] Direct DB imports note:', err.message);
+}
+
 module.exports = async (req, res) => {
-  const siteUrl = process.env.VITE_SITE_URL || 'https://m-store-two.vercel.app';
-  const backendApiUrl = process.env.VITE_API_URL || 'https://m-store-backend.onrender.com/api';
+  const host = req.headers['x-forwarded-host'] || req.headers.host || 'm-store-lilac.vercel.app';
+  const proto = req.headers['x-forwarded-proto'] || (host.includes('localhost') ? 'http' : 'https');
+  const siteUrl = (process.env.VITE_SITE_URL || `${proto}://${host}`).replace(/\/+$/, '');
 
   let products = [];
-  try {
-    const apiRes = await fetch(`${backendApiUrl}/products`, {
-      headers: { Accept: 'application/json' },
-    });
-    if (apiRes.ok) {
-      products = await apiRes.json();
+
+  if (connectDB && Product) {
+    try {
+      await connectDB();
+      products = await Product.find({ available: { $ne: false } }).select('slug id updatedAt').lean();
+    } catch (dbErr) {
+      console.warn('[Vercel Sitemap Serverless] Direct DB error:', dbErr.message);
     }
-  } catch (err) {
-    console.error('[Vercel Sitemap Serverless] Error fetching products:', err.message);
+  }
+
+  if (!products || products.length === 0) {
+    try {
+      const apiRes = await fetch(`${siteUrl}/api/products`, {
+        headers: { Accept: 'application/json' },
+      });
+      if (apiRes.ok) {
+        products = await apiRes.json();
+      }
+    } catch (err) {
+      console.error('[Vercel Sitemap Serverless] Error fetching products:', err.message);
+    }
   }
 
   const staticRoutes = [

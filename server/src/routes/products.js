@@ -79,9 +79,11 @@ router.get('/og/:id', async (req, res) => {
     product = inMemoryProducts.find((p) => p.id === target || p.slug === target || slugify(p.name) === target);
   }
 
-  const clientUrl = process.env.CLIENT_URL || 'https://m-store-two.vercel.app';
+  const host = req.headers['x-forwarded-host'] || req.headers.host || 'm-store-lilac.vercel.app';
+  const proto = req.headers['x-forwarded-proto'] || (host.includes('localhost') ? 'http' : 'https');
+  const clientUrl = (process.env.CLIENT_URL || `${proto}://${host}`).replace(/\/+$/, '');
   const targetSlug = product ? (product.slug || slugify(product.name) || product.id) : target;
-  const redirectUrl = `${clientUrl.replace(/\/+$/, '')}/product/${targetSlug}`;
+  const redirectUrl = `${clientUrl}/product/${targetSlug}`;
 
   if (!product) {
     return res.redirect(redirectUrl);
@@ -91,9 +93,17 @@ router.get('/og/:id', async (req, res) => {
   const description = product.description
     ? product.description.slice(0, 160)
     : `Buy ${product.name} at M STORE. Quality checked with best value warranty and fast Kerala delivery.`;
-  const imageUrl = Array.isArray(product.images) && product.images.length > 0
+  let rawImage = Array.isArray(product.images) && product.images.length > 0
     ? product.images[0]
-    : `${clientUrl}/favicon.png`;
+    : `${clientUrl}/images/mstore-logo.jpg`;
+
+  if (rawImage.includes('res.cloudinary.com') && rawImage.includes('/upload/')) {
+    if (!rawImage.includes('/c_pad') && !rawImage.includes('/c_fill')) {
+      rawImage = rawImage.replace('/upload/', '/upload/c_pad,b_white,w_1200,h_630,f_jpg,q_auto:good/');
+    }
+    rawImage = rawImage.replace(/\.webp($|\?)/i, '.jpg$1');
+  }
+  const imageUrl = rawImage;
 
   res.setHeader('Content-Type', 'text/html');
   return res.send(`<!DOCTYPE html>

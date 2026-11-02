@@ -5,7 +5,9 @@ const Store = require('../models/Store');
 
 router.get('/sitemap.xml', async (req, res) => {
   try {
-    const siteUrl = process.env.CLIENT_URL || 'https://m-store-two.vercel.app';
+    const host = req.headers['x-forwarded-host'] || req.headers.host || 'm-store-lilac.vercel.app';
+    const proto = req.headers['x-forwarded-proto'] || (host.includes('localhost') ? 'http' : 'https');
+    const siteUrl = (process.env.CLIENT_URL || `${proto}://${host}`).replace(/\/+$/, '');
     const products = await Product.find({ isActive: { $ne: false } }).select('slug updatedAt createdAt').lean();
     const stores = await Store.find({ isActive: { $ne: false } }).select('slug updatedAt createdAt').lean();
 

@@ -4,4 +4,4 @@ Disallow: /mstore-management-portal
 Disallow: /admin
 Disallow: /api/
 
-Sitemap: https://m-store-two.vercel.app/sitemap.xml
+Sitemap: https://m-store-lilac.vercel.app/sitemap.xml

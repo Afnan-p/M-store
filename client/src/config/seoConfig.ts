@@ -4,11 +4,11 @@
 
 export const SEO_CONFIG = {
   siteName: 'M Store',
-  siteUrl: import.meta.env.VITE_SITE_URL || 'https://m-store-two.vercel.app',
+  siteUrl: import.meta.env.VITE_SITE_URL || 'https://m-store-lilac.vercel.app',
   defaultTitle: 'M Store Kerala | New & Pre-Owned iPhones',
   defaultDescription:
     'Shop verified new and pre-owned iPhones, accessories and great-value Apple devices at M Store Kerala. Visit our showrooms in Kootanad, Kecheri, Mattom and Pattambi.',
-  defaultImage: `${import.meta.env.VITE_SITE_URL || 'https://m-store-two.vercel.app'}/mstore-logo.png`,
+  defaultImage: `${import.meta.env.VITE_SITE_URL || 'https://m-store-lilac.vercel.app'}/mstore-logo.png`,
   defaultLocale: 'en_IN',
   twitterHandle: '@mstorekerala',
   
@@ -88,8 +88,8 @@ export const SEO_CONFIG = {
   organization: {
     name: 'M Store Kerala',
     legalName: 'M Store Retail India Pvt Ltd',
-    url: import.meta.env.VITE_SITE_URL || 'https://m-store-two.vercel.app',
-    logo: `${import.meta.env.VITE_SITE_URL || 'https://m-store-two.vercel.app'}/mstore-logo.png`,
+    url: import.meta.env.VITE_SITE_URL || 'https://m-store-lilac.vercel.app',
+    logo: `${import.meta.env.VITE_SITE_URL || 'https://m-store-lilac.vercel.app'}/mstore-logo.png`,
     telephone: '+91 98460 12341',
     contactPoint: {
       type: 'ContactPoint',

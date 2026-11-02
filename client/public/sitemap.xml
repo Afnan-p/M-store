@@ -1,42 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://m-store-two.vercel.app/</loc>
+    <loc>https://m-store-lilac.vercel.app/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://m-store-two.vercel.app/iphones</loc>
+    <loc>https://m-store-lilac.vercel.app/iphones</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://m-store-two.vercel.app/used-iphones</loc>
+    <loc>https://m-store-lilac.vercel.app/used-iphones</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://m-store-two.vercel.app/accessories</loc>
+    <loc>https://m-store-lilac.vercel.app/accessories</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://m-store-two.vercel.app/offers</loc>
+    <loc>https://m-store-lilac.vercel.app/offers</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://m-store-two.vercel.app/stores</loc>
+    <loc>https://m-store-lilac.vercel.app/stores</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://m-store-two.vercel.app/about</loc>
+    <loc>https://m-store-lilac.vercel.app/about</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://m-store-two.vercel.app/contact</loc>
+    <loc>https://m-store-lilac.vercel.app/contact</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>

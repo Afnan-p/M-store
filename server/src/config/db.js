@@ -43,8 +43,8 @@ const connectDB = async () => {
 
     cached.promise = mongoose
       .connect(mongoUri, {
-        serverSelectionTimeoutMS: 5000,
-        connectTimeoutMS: 5000,
+        serverSelectionTimeoutMS: 10000,
+        connectTimeoutMS: 10000,
         maxPoolSize: 10, // Maintain up to 10 socket connections
       })
       .then((m) => {

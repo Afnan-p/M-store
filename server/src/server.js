@@ -22,15 +22,32 @@ app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 // Production-Ready CORS Configuration
 const allowedOrigins = [
   process.env.CLIENT_URL,
+  'https://m-store-lilac.vercel.app',
   'http://localhost:5173',
   'http://localhost:3000',
   'http://127.0.0.1:5173',
 ].filter(Boolean);
 
+const isOriginAllowed = (origin) => {
+  if (!origin) return true;
+  if (process.env.NODE_ENV !== 'production') return true;
+  if (allowedOrigins.includes(origin)) return true;
+
+  try {
+    const { hostname } = new URL(origin);
+    // Allow any Vercel domain (*.vercel.app)
+    if (hostname.endsWith('.vercel.app') || hostname === 'localhost' || hostname === '127.0.0.1') {
+      return true;
+    }
+  } catch (_) {}
+
+  return false;
+};
+
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow non-browser requests or matched origins or dev mode
-    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+    // Allow non-browser requests or matched origins or dev mode or vercel deployments
+    if (isOriginAllowed(origin)) {
       callback(null, true);
     } else {
       callback(new Error('CORS Policy Rejection: Origin not allowed'));

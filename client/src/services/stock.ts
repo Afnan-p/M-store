@@ -1,7 +1,6 @@
 import type { ProductStock, StockHistoryItem, StockFilterOptions, StockStatus, StockReason } from '../types/stock';
 import { fetchFromAPI } from './apiClient';
 import { ProductService } from './products';
-import { OfferProductService } from './offerProducts';
 import { isAndroidNewProduct, isAndroidUsedProduct, isIPhoneNewProduct, isIPhoneUsedProduct } from '../utils/categoryUtils';
 
 const LOCAL_STOCK_KEY = 'mstore_stock_records_v2';
@@ -69,12 +68,9 @@ function getLocalStockRecords(): ProductStock[] {
     }
   }
 
-  // Purge any extra dummy stock records for deleted products
+  // Purge any extra dummy stock records for deleted products or offer products
   const activeProdIds = new Set(allProds.map((p) => String(p.id)));
-  const offerProds = OfferProductService.getOfferProductsSync();
-  offerProds.forEach((op) => activeProdIds.add(String(op.id)));
-
-  const cleaned = records.filter((r) => activeProdIds.has(String(r.productId)));
+  const cleaned = records.filter((r) => activeProdIds.has(String(r.productId)) && !String(r.productId).startsWith('offprod_'));
   if (cleaned.length !== records.length) {
     records = cleaned;
     modified = true;
@@ -126,35 +122,28 @@ function saveLocalStockHistory(history: StockHistoryItem[]) {
 
 function enrichStockRecords(records: ProductStock[]): ProductStock[] {
   const allProds = ProductService.getProductsSync();
-  const offerProds = OfferProductService.getOfferProductsSync();
-
   const prodMap = new Map(allProds.map((p) => [String(p.id), p]));
-  const offerMap = new Map(offerProds.map((op) => [String(op.id), op]));
-
   const uniqueMap = new Map<string, ProductStock>();
 
   for (const record of records) {
     const pid = String(record.productId);
-    if (uniqueMap.has(pid)) continue;
+    if (uniqueMap.has(pid) || pid.startsWith('offprod_') || record.itemType === 'offerProduct') continue;
 
     const p = prodMap.get(pid);
-    const op = offerMap.get(pid);
-    if (!p && !op) continue;
-    const name = p?.name || op?.name || record.productName || record.productId;
-    let cat = p?.category || record.productCategory || (op ? 'accessory' : (record.productId.includes('acc') ? 'accessory' : 'iphone-used'));
-    if (p) {
-      if (cat === 'android' || cat === 'used-android' || cat === 'android-new' || cat === 'android-used') {
-        cat = isAndroidNewProduct(p) ? 'android-new' : 'android-used';
-      } else if (cat === 'iphone' || cat === 'used-iphones' || cat === 'iphone-new' || cat === 'iphone-used') {
-        cat = isIPhoneNewProduct(p) ? 'iphone-new' : 'iphone-used';
-      }
+    if (!p) continue;
+    const name = p.name || record.productName || record.productId;
+    let cat = p.category || record.productCategory || 'accessory';
+    if (cat === 'android' || cat === 'used-android' || cat === 'android-new' || cat === 'android-used') {
+      cat = isAndroidNewProduct(p) ? 'android-new' : 'android-used';
+    } else if (cat === 'iphone' || cat === 'used-iphones' || cat === 'iphone-new' || cat === 'iphone-used') {
+      cat = isIPhoneNewProduct(p) ? 'iphone-new' : 'iphone-used';
     }
     
-    const pImg = p?.images && p.images.length > 0 ? p.images[0] : null;
-    const image = pImg || op?.image || record.productImage || '/images/placeholder-iphone.svg';
+    const pImg = p.images && p.images.length > 0 ? p.images[0] : null;
+    const image = pImg || record.productImage || '/images/placeholder-iphone.svg';
 
-    const price = p?.price || record.productPrice || 0;
-    const storage = p?.storage || record.productStorage || (cat === 'accessory' ? 'N/A' : '128GB');
+    const price = p.price || record.productPrice || 0;
+    const storage = p.storage || record.productStorage || (cat === 'accessory' ? 'N/A' : '128GB');
     const currentStock = Math.max(0, record.stock ?? (p as any)?.stock ?? 10);
 
     uniqueMap.set(pid, {

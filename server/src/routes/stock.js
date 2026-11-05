@@ -32,7 +32,6 @@ router.get('/', async (req, res) => {
   try {
     if (isDbConnected()) {
       const products = await Product.find({}).lean();
-      const offerProducts = await OfferProduct.find({}).lean();
 
       // Build fast lookup maps by String(id), String(_id) and lowercase name
       const prodMap = new Map();
@@ -42,21 +41,11 @@ router.get('/', async (req, res) => {
         if (p.name) prodMap.set(p.name.toLowerCase().trim(), p);
       });
 
-      const offerMap = new Map();
-      offerProducts.forEach((op) => {
-        if (op.id) offerMap.set(String(op.id), op);
-        if (op._id) offerMap.set(String(op._id), op);
-        if (op.name) offerMap.set(op.name.toLowerCase().trim(), op);
-      });
-
       let allStockRecords = await ProductStock.find({}).lean();
 
-      // Ensure a single global stock entry exists per product
+      // Ensure a single global stock entry exists per real selling product (Phones & Accessories)
       const missingDocs = [];
-      const allProductItems = [
-        ...products.map((p) => ({ id: p.id, itemType: 'product' })),
-        ...offerProducts.map((op) => ({ id: op.id, itemType: 'offerProduct' })),
-      ];
+      const allProductItems = products.map((p) => ({ id: p.id, itemType: 'product' }));
 
       for (const pItem of allProductItems) {
         const exists = allStockRecords.some((s) => String(s.productId) === String(pItem.id));
@@ -66,7 +55,7 @@ router.get('/', async (req, res) => {
             productId: String(pItem.id),
             storeId: 'global',
             stock: 10,
-            itemType: pItem.itemType,
+            itemType: 'product',
           });
         }
       }
@@ -80,14 +69,15 @@ router.get('/', async (req, res) => {
         }
       }
 
-      // Purge orphaned stocks: records whose productId does not belong to any existing product
+      // Purge non-product stocks (offerProducts are managed exclusively under Offer Products)
       const validProductIds = new Set(allProductItems.map((pItem) => String(pItem.id)));
       const orphanedStockIds = [];
       const validStockRecords = [];
 
       for (const s of allStockRecords) {
         const pid = String(s.productId);
-        if (validProductIds.has(pid) || prodMap.has(pid)) {
+        const isOfferProduct = s.itemType === 'offerProduct' || pid.startsWith('offprod_');
+        if (!isOfferProduct && (validProductIds.has(pid) || prodMap.has(pid))) {
           validStockRecords.push(s);
         } else {
           orphanedStockIds.push(s._id);
@@ -98,7 +88,7 @@ router.get('/', async (req, res) => {
         try {
           await ProductStock.deleteMany({ _id: { $in: orphanedStockIds } });
         } catch (delErr) {
-          console.warn('Could not auto-purge orphaned stocks:', delErr.message);
+          console.warn('Could not auto-purge orphaned/offer stocks:', delErr.message);
         }
       }
 
@@ -116,15 +106,14 @@ router.get('/', async (req, res) => {
 
       const enriched = stockRecords.map((s) => {
         const p = prodMap.get(String(s.productId)) || (s.productName ? prodMap.get(s.productName.toLowerCase().trim()) : null);
-        const op = offerMap.get(String(s.productId)) || (s.productName ? offerMap.get(s.productName.toLowerCase().trim()) : null);
 
-        const name = p ? p.name : op ? op.name : (s.productName || s.productId);
-        const cat = p ? p.category : op ? 'accessory' : (s.productId.includes('acc') ? 'accessory' : 'iphone-used');
+        const name = p ? p.name : (s.productName || s.productId);
+        const cat = p ? p.category : (s.productId.includes('acc') ? 'accessory' : 'iphone-used');
 
         const pImg = p?.images && p.images.length > 0 ? p.images[0] : null;
-        const image = pImg || op?.image || s.productImage || '/images/placeholder-iphone.svg';
+        const image = pImg || s.productImage || '/images/placeholder-iphone.svg';
 
-        const price = p ? p.price : op ? op.price : 0;
+        const price = p ? p.price : 0;
         const storage = p ? p.storage : (cat === 'accessory' ? 'N/A' : '128GB');
         const calcStatus = getStockStatus(s.stock);
 
@@ -133,7 +122,7 @@ router.get('/', async (req, res) => {
           productId: s.productId,
           storeId: s.storeId,
           stock: s.stock,
-          itemType: s.itemType,
+          itemType: 'product',
           status: calcStatus,
           productName: name,
           productCategory: cat,

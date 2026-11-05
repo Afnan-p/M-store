@@ -139,6 +139,7 @@ function enrichStockRecords(records: ProductStock[]): ProductStock[] {
 
     const p = prodMap.get(pid);
     const op = offerMap.get(pid);
+    if (!p && !op) continue;
     const name = p?.name || op?.name || record.productName || record.productId;
     let cat = p?.category || record.productCategory || (op ? 'accessory' : (record.productId.includes('acc') ? 'accessory' : 'iphone-used'));
     if (p) {
@@ -241,8 +242,8 @@ export const StockService = {
 
       const queryStr = params.toString();
       const endpoint = queryStr ? `/stock?${queryStr}` : '/stock';
-      const apiResult = await fetchFromAPI<ProductStock[]>(endpoint, { timeoutMs: 1500 });
-      if (apiResult && Array.isArray(apiResult) && apiResult.length > 0) {
+      const apiResult = await fetchFromAPI<ProductStock[]>(endpoint, { timeoutMs: 10000 });
+      if (apiResult && Array.isArray(apiResult)) {
         records = apiResult;
         if (!filters?.storeId || filters.storeId === 'ALL' || filters.storeId === 'all') {
           saveLocalStockRecords(apiResult);

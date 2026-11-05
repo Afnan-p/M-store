@@ -80,6 +80,30 @@ router.get('/', async (req, res) => {
         }
       }
 
+      // Purge orphaned stocks: records whose productId does not belong to any existing product
+      const validProductIds = new Set(allProductItems.map((pItem) => String(pItem.id)));
+      const orphanedStockIds = [];
+      const validStockRecords = [];
+
+      for (const s of allStockRecords) {
+        const pid = String(s.productId);
+        if (validProductIds.has(pid) || prodMap.has(pid)) {
+          validStockRecords.push(s);
+        } else {
+          orphanedStockIds.push(s._id);
+        }
+      }
+
+      if (orphanedStockIds.length > 0) {
+        try {
+          await ProductStock.deleteMany({ _id: { $in: orphanedStockIds } });
+        } catch (delErr) {
+          console.warn('Could not auto-purge orphaned stocks:', delErr.message);
+        }
+      }
+
+      allStockRecords = validStockRecords;
+
       // Deduplicate: pick 1 stock record per product ID
       const uniqueStockByProduct = new Map();
       for (const s of allStockRecords) {

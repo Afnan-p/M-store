@@ -68,10 +68,8 @@ router.get('/', async (req, res) => {
       }
 
       const offerProducts = await OfferProduct.find(query).sort({ createdAt: -1 });
-      if (offerProducts && offerProducts.length > 0) {
-        inMemoryOfferProducts = offerProducts.map((d) => (d.toObject ? d.toObject() : d));
-        return res.json(offerProducts);
-      }
+      inMemoryOfferProducts = offerProducts.map((d) => (d.toObject ? d.toObject() : d));
+      return res.json(offerProducts);
     }
   } catch (error) {
     console.warn('MongoDB error fetching offer products, returning in-memory catalog:', error.message);

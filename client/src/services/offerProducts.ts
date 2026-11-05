@@ -85,7 +85,7 @@ export const OfferProductService = {
     const remote = await fetchFromAPI<OfferProduct[]>(endpoint);
     const local = loadOfferProductsFromStorage();
 
-    if (remote && Array.isArray(remote) && remote.length > 0) {
+    if (remote && Array.isArray(remote)) {
       saveOfferProductsToStorage(remote);
       return remote;
     }
